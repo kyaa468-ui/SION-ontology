@@ -1,0 +1,46 @@
+{
+  "version": "IMPROVEMENT@v1",
+  "daily_research_usd": 5,
+  "worker_count": 1,
+  "completed_case_sessions": 20,
+  "detailed_replay_sessions": 20,
+  "correction_sessions": 5,
+  "stale_research_days": 30,
+  "query_limits": {
+    "queries": 40,
+    "checks": 20,
+    "rows": 200,
+    "bytes": 2097152,
+    "depth": 3
+  },
+  "assessment_max_sessions": null,
+  "auto_apply": [],
+  "validation_criteria": {},
+  "observation_criteria": {},
+  "storage_bytes": null,
+  "case_count": null,
+  "research_job_bytes": null,
+  "notification_channels": [],
+  "notification_attempts": 3,
+  "registered_change_targets": [],
+  "source_deployment_targets": {},
+  "research_model": null,
+  "research_model_version": null,
+  "research_call_usd": 1,
+  "assessment_definitions": {
+    "institution.intraday_net@v1": {
+      "source": "delivered_evidence",
+      "unit": "KRW",
+      "method": "intraday_estimate",
+      "collector": "delivered_evidence",
+      "field": "institution"
+    },
+    "foreign.intraday_net@v1": {
+      "source": "delivered_evidence",
+      "unit": "KRW",
+      "method": "intraday_estimate",
+      "collector": "delivered_evidence",
+      "field": "foreign"
+    }
+  }
+}

@@ -35,7 +35,8 @@ def _error(job_id, operation, exc):
 
 def _definition():
     names = ('close_evaluation.py', 'premise_evaluation.py', 'market_calendar.py',
-             'daily_observations.py', 'evaluation_context.py', 'scoring_store.py')
+             'daily_observations.py', 'evaluation_context.py', 'scoring_store.py',
+             'scoring_targets.py', 'legacy_assessments.py')
     source = {name: Path(__file__).with_name(name).read_text(encoding='utf-8') for name in names}
     identifier = 'scoring-definition-' + S.digest(source)
     body = {'definition_id': identifier, 'sources': source, 'sha256': S.digest(source)}
@@ -91,14 +92,26 @@ beyond that budget remain explicitly unevaluated and can be retried next job.
     # receipt must never be backdated to the requested knowledge cutoff.
     manifest = {'scoring_job_id': job_id, 'phase': phase, 'market_as_of': target.isoformat(),
                 'knowledge_as_of': known.isoformat(), 'started_at': C.now().isoformat(),
-                'max_symbols': max_symbols, 'expected_targets': [], 'target_set_incomplete': False}
+                'max_symbols': max_symbols, 'expected_targets': [], 'expected_count':None,
+                'target_set_incomplete': False}
     errors, items, storage_failed = [], [], False
     try:
-        selected = PE.committed_premises(knowledge_as_of=known.isoformat(), market_as_of=target.isoformat())
+        import scoring_targets as ST
+        use_targets=live and ST.enabled()
+        selected = (ST.select(known.isoformat(),target.isoformat(),calendar=calendar,advance=True) if use_targets else
+                    PE.committed_premises(knowledge_as_of=known.isoformat(), market_as_of=target.isoformat()))
         applications = selected['applications']
+        import legacy_assessments as LA
+        is_pending=lambda x:ST.pending(x,known.isoformat()) if use_targets else LA.pending(x['application']['application_id'],known.isoformat())
+        terminal_applications = [x for x in applications if not is_pending(x)]
+        applications = [x for x in applications if is_pending(x)]
         manifest['expected_targets'] = [{'application_id': x['application']['application_id'],
-                                         'code': x['application']['code'], 'judgment_ids': x['judgment_ids']} for x in applications]
+                                         'code': x['application']['code'], 'judgment_ids': x['judgment_ids']} for x in applications + terminal_applications]
         manifest['target_set_incomplete'] = bool(selected.get('target_set_incomplete'))
+        manifest['expected_count']=selected.get('expected_count',len(manifest['expected_targets']))
+        if use_targets:
+            manifest['target_source']=selected.get('source','producer_scoring_targets')
+            manifest['target_scope']=selected.get('scope','unavailable')
         errors.extend(selected.get('errors', []))
         manifest['definition'] = _definition()
         S.archive('jobs', job_id, manifest)
@@ -106,7 +119,7 @@ beyond that budget remain explicitly unevaluated and can be retried next job.
         error = _error(job_id, 'job_start', exc)
         return {**manifest, 'run_status': 'recording_error', 'recording_status': 'recording_error',
                 'target_set_incomplete': True, 'errors': [error],
-                **_counts([], len(manifest['expected_targets']), True)}
+                **_counts([], manifest.get('expected_count',len(manifest['expected_targets'])), True)}
 
     legacy = None
     try:
@@ -199,6 +212,8 @@ beyond that budget remain explicitly unevaluated and can be retried next job.
             result = PE.evaluate_premise(app, window, daily.get('rows', {}), target.isoformat(), evaluation_cutoff)
             result['collection_errors'] = copy.deepcopy(daily.get('errors', []))
             stored = PE.record_evaluation(result, scoring_job_id=job_id)
+            if stored.get('recording_status') == 'recorded':
+                LA.record(app, stored, window, calendar)
             item.update(evaluation_id=stored.get('evaluation_id'), verdict=stored.get('verdict', 'unknown'),
                         recording_status=stored.get('recording_status', 'recorded'),
                         execution_context=EC.execution_context(entry['judgment_ids'], evaluation_cutoff))
@@ -219,18 +234,41 @@ beyond that budget remain explicitly unevaluated and can be retried next job.
             errors.append(_error(job_id, 'job_item', exc))
         items.append(item)
 
+    for entry in terminal_applications:
+        import improvement_store as IS
+        prior=entry.get('lifecycle') or IS.get('legacy_assessment_state',entry['application']['application_id'])
+        items.append({'application_id':prior['application_id'],'evaluation_id':prior['evaluation_id'],
+                      'verdict':prior['verdict'],'recording_status':'recorded','reused_finalized':True})
+    try:
+        import assessment_contracts, opportunity_cases
+        generic = assessment_contracts.due(as_of=evaluation_cutoff,calendar=calendar)
+        opportunity_cases.reconcile_assessments()
+    except Exception as exc:
+        generic=[]
+        storage_failed=True
+        errors.append(_error(job_id,'generic_assessment',exc))
     incomplete = manifest['target_set_incomplete'] or storage_failed
     report = {**manifest, 'finished_at': C.now().isoformat(), 'items': items, 'errors': errors,
               'effective_knowledge_as_of': evaluation_cutoff,
               'legacy_context_id': job_id if legacy is not None else None,
+              'generic_assessments': [{'id':x['id'],'state':x['state'],'verdict':x['verdict']} for x in generic],
               'run_status': 'partial' if incomplete or errors else 'completed',
               'recording_status': 'recording_error' if storage_failed else 'recorded',
-              **_counts(items, len(applications), incomplete)}
+              **_counts(items, manifest['expected_count'], incomplete)}
     try:
         S.archive('job_results', job_id, report)
     except Exception as exc:
         report.update(run_status='recording_error', recording_status='recording_error', conclusive_rate=None)
         report['errors'].append(_error(job_id, 'job_finish', exc))
+    if report['recording_status']=='recorded':
+        try:
+            import independent_cases
+            independent_cases.scoring_finished(report)
+        except Exception as exc:
+            try:
+                import case_store
+                case_store.record_error(job_id,'independent_case_scoring_commit',exc)
+            except Exception:pass
     return report
 
 

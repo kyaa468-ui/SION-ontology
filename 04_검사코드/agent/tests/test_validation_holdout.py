@@ -105,3 +105,9 @@ def test_known_discovery_exposure_disqualifies_positive_enrollment(monkeypatch):
     CS.archive('datasets','exposed',{'review_id':'exposed','cases':[{'application_id':'a'}]})
     proof=H.status(row['validation_id'])
     assert proof['independent'] is False and proof['exposed_application_ids']==['a']
+    # Both the original premise and dataset can be hidden without resetting
+    # exposure or manufacturing new positive independent eligibility.
+    path.unlink()
+    (CS.root()/'datasets').rename(Path(C.WORK)/'masked-datasets')
+    proof=H.status(row['validation_id'])
+    assert proof['independent'] is False and proof['exposed_application_ids']==['a']

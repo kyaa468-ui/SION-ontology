@@ -83,6 +83,10 @@ def archive(kind, identifier, body):
     envelope = {'format':'immutable-case-review-record@v1', 'content_sha256':digest(body), 'record':body}
     try:
         records_v2.publish(target, envelope, kind=kind, exclusive=False)
+        if kind in {'usage_events','research_usage','datasets'}:
+            import research_usage_ledger
+            try:research_usage_ledger.record_source(kind,identifier,body)
+            except ValueError as exc:research_usage_ledger.problem(kind,identifier,exc)
         return records_v2.load(target)['record']
     except ValueError as exc:
         raise StoreError(str(exc)) from exc
@@ -93,10 +97,13 @@ def locked(identifier, timeout=30):
     """Serialize publication of one revision series across processes/threads."""
     path = root() / 'locks' / (_id(identifier) + '.sqlite3')
     path.parent.mkdir(parents=True, exist_ok=True)
+    import storage_leases
+    pin=storage_leases.Pin(C.ontology_root())
     # SQLite's reserved writer lock works on Windows and POSIX. These lock-only
     # databases live in research storage, completely separate from order guards.
-    connection = sqlite3.connect(path, timeout=timeout)
+    connection = None
     try:
+        connection = sqlite3.connect(path, timeout=timeout)
         try:
             connection.execute('BEGIN IMMEDIATE')
         except sqlite3.OperationalError as exc:
@@ -106,7 +113,8 @@ def locked(identifier, timeout=30):
         yield
         connection.commit()
     finally:
-        connection.close()
+        if connection is not None:connection.close()
+        pin.close()
 
 
 def records(kind):

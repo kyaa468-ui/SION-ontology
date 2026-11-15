@@ -218,18 +218,8 @@ def snapshot(params=None, at=None):
                 or intent.get('package_id') != marker['package_id']
                 or intent.get('after_params') != params):
             raise ValueError('UNCOMMITTED_OR_CHANGED_POLICY_POINTER')
-        prepared = load('adoptions',package['adoption_id'])
-        import validation_store as V
-        report = V.load('results',package['validation_result_id'])
-        proof = V.load('result_commits',package['validation_result_id'])
-        if (not prepared or not report or not proof or proof.get('result_hash') != V.digest(report)
-                or V.digest(report) != package['validation_result_hash']
-                or prepared.get('validation_result_hash') != package['validation_result_hash']
-                or prepared.get('candidate_policy_hash') != package['candidate_policy_hash']
-                or prepared.get('candidate_params') != semantic_params(params)
-                or prepared.get('expected_revision') != revision(intent['before_params'])
-                or report.get('adoption_eligibility',{}).get('status') != 'eligible'):
-            raise ValueError('ADOPTION_PROOF_CHAIN_INVALID')
+        import policy_proof
+        policy_proof.resolve(package,intent,params)
         result['package'] = copy.deepcopy(package)
         result['activation_id'] = marker['activation_id']
         result['adoption_id'] = package['adoption_id']
@@ -285,11 +275,9 @@ def judgment_inputs(judgment):
     accidentally change which adopted claims the runtime rule means. This
     projection covers adopted claims of the judgment and creates no premise.
     """
-    import case_dataset as D
-    application = {'application_id':None,'judgment_id':judgment['judgment_id'],'code':judgment['code'],
-                   'judgment_date':judgment['created_at'][:10],
-                   'claim_ids':[a['id'] for a in judgment.get('arguments',[]) if a.get('adoption')=='adopted']}
-    return D.extract_case_context(judgment,application)
+    import runtime_policy_inputs as inputs
+    frozen = inputs.read(judgment)
+    return frozen if frozen is not None else inputs.original(judgment)
 
 
 @contextmanager

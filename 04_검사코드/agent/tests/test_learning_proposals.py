@@ -183,13 +183,16 @@ def test_version_retry_conflict_and_current_base_drift(monkeypatch):
 def test_actual_step1_to_step6_and_no_operational_side_effect(monkeypatch,calendar):
     fake,manifest,app=completed_case(monkeypatch,calendar)
     report=CR.build_review()
-    protected={p:p.read_bytes() for p in Path(C.WORK).rglob('*') if p.is_file() and not p.name.startswith('storage_index.sqlite3') and '/case_review/' not in str(p)}
+    from test_research_usage_ledger import non_usage_state
+    state=non_usage_state()
+    protected={p:p.read_bytes() for p in Path(C.WORK).rglob('*') if p.is_file() and not p.name.startswith(('storage_index.sqlite3','storage_publish.sqlite3')) and '/improvement/state.sqlite3' not in str(p) and '/case_review/' not in str(p)}
     run=P.build_context(report['review_id'])
     assert run['context_status']=='ready',run
     assert run['submission_status']=='not_submitted'
     delivered=P.get_proposal_context(run['proposal_run_id'])
     assert delivered['catalog'] and len(fake.orders)==1
     assert all(p.read_bytes()==b for p,b in protected.items())
+    assert non_usage_state()==state
     assert not Path(C.WORK,'lessons.json').exists()
 
 

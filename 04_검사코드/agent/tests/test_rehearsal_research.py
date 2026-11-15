@@ -9,6 +9,8 @@ from rehearsal_research import run_research
 
 
 def test_research_walkthrough_uses_tools_and_does_not_invent_runtime(monkeypatch):
+    from test_research_capacity import configure
+    configure(monkeypatch)
     fake, attempt, app, judgment_id, plan = accepted(monkeypatch)
     clock = {'now': C.now()}
     monkeypatch.setattr(C, 'now', lambda: clock['now'])

@@ -1,5 +1,5 @@
 diff --git a/agent/src/risk.py b/agent/src/risk.py
-index 5584500..c38cf6c 100644
+index 5584500..6141454 100644
 --- a/agent/src/risk.py
 +++ b/agent/src/risk.py
 @@ -4,10 +4,12 @@
@@ -15,8 +15,12 @@ index 5584500..c38cf6c 100644
  
  
  def daily_pnl(account):
-@@ -24,101 +26,178 @@ def orders_this_run():
-     return sum(1 for x in C.read_jsonl(C.JOURNAL) if x["kind"] == "fill" and x.get("run") == run)
+@@ -21,104 +23,181 @@ def orders_this_run():
+     run = os.environ.get("RUN_ID")
+     if not run:
+         return 0
+-    return sum(1 for x in C.read_jsonl(C.JOURNAL) if x["kind"] == "fill" and x.get("run") == run)
++    return sum(1 for x in C.journal_run_rows(C.read_jsonl(C.JOURNAL),run) if x["kind"] == "fill")
  
  
 -def check(order, account, price, p=None, r=None):

@@ -43,7 +43,7 @@ def validate_spec(spec):
         if field in spec and not isinstance(spec[field],dict): raise ValueError(field.upper()+'_OBJECT_REQUIRED')
     if spec.get('stop_rules'):
         raise ValueError('UNSUPPORTED_STOP_RULES; missing inputs already make the result incomplete')
-    if set(spec.get('prompt',{}))-{'model','budget_usd'}:
+    if set(spec.get('prompt',{}))-{'model','model_version','budget_usd'}:
         raise ValueError('UNSUPPORTED_PROMPT_SETTING')
     if spec.get('comparison_kind')=='prompt_pair':
         prompt=spec.get('prompt',{})
@@ -124,6 +124,8 @@ def register_validation(proposal_id,request_key,spec):
                  'criteria_complete':not missing,'missing_criteria':missing,
                  'independence':'prospectively_reserved' if normalized['mode']=='prospective' else 'discovery_replay_not_independent',
                  'status':'registered','operational_activation':False,'real_ai_authorized_by_registration':False}
+            import retention_store
+            retention_store.register_validation_support(validation_id,normalized,row['registered_at'])
             S.archive('specs',validation_id,row)
             if normalized['mode']=='prospective':
                 import validation_holdout as H

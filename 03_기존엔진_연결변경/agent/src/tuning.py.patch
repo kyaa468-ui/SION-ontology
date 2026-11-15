@@ -1,8 +1,19 @@
 diff --git a/agent/src/tuning.py b/agent/src/tuning.py
-index bf1fdae..4a4eee3 100644
+index bf1fdae..1536118 100644
 --- a/agent/src/tuning.py
 +++ b/agent/src/tuning.py
-@@ -10,8 +10,11 @@
+@@ -1,17 +1,15 @@
+ """
+-기준값 자동 조정 (피드백 루프).
+-
+-평일 장 마감 뒤 조정 실행(run.py tune)에서 에이전트가
+-  1) get_tuning_context 로 성과 요약을 보고
+-  2) apply_tuning 으로 바꿀 값을 제안하면
+-서버가 config/tuning.json 규칙(허용 키·범위·1회 변경 폭·횟수·쿨다운·일관성)으로 검사해
+-통과한 것만 config/params.json 에 씁니다. risk_limits.json 은 건드릴 수 없습니다.
++기존 성과 조회와 통합 변경안 접수. 직접 설정 쓰기는 종료되었다.
++보관이 끝난 상세는 체크포인트의 현재 상태·누계와 구분한다.
+ """
  import json
  import os
  import re
@@ -14,12 +25,154 @@ index bf1fdae..4a4eee3 100644
  
  import common as C
  
-@@ -124,29 +127,38 @@ def context():
+@@ -31,15 +29,23 @@ def get_value(p, key):
+ 
+ def history(rows=None):
+     rows = C.read_jsonl(C.JOURNAL) if rows is None else rows
+-    return [r for r in rows if r["kind"] == "tune"]
++    checkpoint=C.journal_checkpoint(rows)
++    return ((checkpoint or {}).get('all',{}).get('tuning_tail',[])
++            +[r for r in rows if r["kind"] == "tune"])
+ 
+ 
+-def cooldown_keys(rows=None, rl=None):
++def cooldown_keys(rows=None, rl=None, *, scope='all', start=None):
+     """최근 n번의 조정 실행에서 바꾼 키는 이번엔 못 바꿈 (값이 왔다 갔다 하지 않도록)."""
+     rl = rl or rules()
+     n = rl.get("cooldown_runs", 1)
+-    recent = history(rows)[-n:] if n else []
+-    return sorted({a["key"] for r in recent for a in r.get("applied", [])})
++    rows=C.read_jsonl(C.JOURNAL) if rows is None else rows
++    import journal_checkpoint as J
++    summary=J.state(rows,scope,start);ordinal=summary['tunes'];changed=summary['last_tuned']
++    for row in rows:
++        if row['kind']=='tune':
++            ordinal+=1
++            for item in row.get('applied',[]):changed[item['key']]=ordinal
++    return sorted(k for k,v in changed.items() if n and v>ordinal-n)
+ 
+ 
+ def allowed_today(rl=None):
+@@ -48,10 +54,12 @@ def allowed_today(rl=None):
+ 
+ 
+ # ---------------- 성과 요약 ----------------
+-def trade_results(rows, acc):
++def trade_results(rows, acc, *, scope='all', start=None, limit=None):
+     """종목별 매수→매도 결과. 청산 = 가격 기준 실현 수익률, 보유 중 = 키움 수익률(수수료·세금 반영)."""
+     held = {h["code"]: h for h in (acc or {}).get("holdings", [])}
+     book = defaultdict(lambda: {"qty": 0, "cost": 0.0})
++    import journal_checkpoint as J
++    book.update(J.state(rows,scope,start)['book'])
+     out = []
+     for r in rows:
+         if r["kind"] != "fill":
+@@ -70,83 +78,122 @@ def trade_results(rows, acc):
+                         "return_price": round(r["price"] / avg - 1, 4)})
+             b["qty"] = max(0, b["qty"] - r["qty"])
+             b["cost"] = avg * b["qty"]
+-    for code, b in book.items():
++            if limit is not None and len(out)>limit:del out[0]
++    if limit is not None:
++        held_count=sum(b['qty']>0 for b in book.values())
++        if held_count>limit:raise ValueError('JOURNAL_TRADE_DETAIL_CAPACITY_BLOCKED')
++        closed_limit=limit-held_count
++        out=out[-closed_limit:] if closed_limit else []
++    for code, b in sorted(book.items()):
+         if b["qty"] > 0:
+             h = held.get(code, {})
+             out.append({"code": code, "name": b.get("name"), "entry": b.get("entry"), "buy_confidence": b.get("conf"),
+                         "regime": b.get("regime"), "status": "보유 중",
+                         "return_price": round(h["price"] / h["avg_price"] - 1, 4) if h.get("avg_price") else None,
+                         "return_after_costs": h.get("pnl_pct")})
++    if limit is not None and len(out)>limit:
++        # Open holdings are mandatory context. Do not silently drop them to
++        # make an optional AI response fit its budget.
++        raise ValueError('JOURNAL_TRADE_DETAIL_CAPACITY_BLOCKED')
+     return out
+ 
+ 
+ def context():
+     rl, p, r = rules(), C.params(), C.risk_limits()
+-    rows = C.read_jsonl(C.JOURNAL)
++    import journal_checkpoint as J
++    import improvement_store as S
++    limits=S.config()['query_limits'];limit=limits['rows']
+     start = p["competition"]["start"]
+-    rows = [x for x in rows if x["time"][:10] >= start]
++    rows=J.Since(C.read_jsonl(C.JOURNAL),start)
++    summary=J.summarize(rows,scope='competition',start=start)
+     acc = C.read_json(C.ACCOUNT, {}) or {}
+-    equity = C.read_json(os.path.join(C.DOCS_DATA, "equity.json"), []) or []
+-    fills = [x for x in rows if x["kind"] == "fill"]
++    from collections import deque
++    import ijson
++    equity=deque(maxlen=limit)
++    try:
++        with open(os.path.join(C.DOCS_DATA,'equity.json'),'rb') as stream:
++            equity.extend(ijson.items(stream,'item',use_float=True))
++    except FileNotFoundError:pass
+     days_left = C.business_days(C.today().isoformat(), date.fromisoformat(p["competition"]["end"]))
+     regimes = {}
+     for x in rows:
+         if x["kind"] == "regime":
+             regimes[x["time"][:10]] = {"regime": x["regime"], "cap": x["cap"]}
+-    review = next((x for x in reversed(rows) if x["kind"] == "review"), None)
+-    cd = cooldown_keys(rows, rl)
+-    return {
++            if len(regimes)>limit:del regimes[min(regimes)]
++    review=summary['last_review']
++    cd = cooldown_keys(rows, rl,scope='competition',start=start)
++    histogram=J.confidence_histogram(summary,p);confidence=[]
++    for item in histogram:confidence += [item['confidence']]*min(item['count'],max(0,limit-len(confidence)))
++    checkpoint=C.journal_checkpoint(rows)
++    result={
+         "today": f"{C.today().isoformat()} ({DAY_NAMES[C.today().weekday()]})",
+         "apply_allowed_today": allowed_today(rl),
+         "competition": {"week": C.competition_week(p=p), "business_days_left": days_left,
+-                        "fills": len(fills), "min_trades": p["competition"]["min_trades"]},
++                        "fills": summary['fills'], "min_trades": p["competition"]["min_trades"]},
+         "account": {"total": acc.get("total"), "return": round(acc["total"] / r["initial_capital"] - 1, 4) if acc.get("total") else None,
+                     "cash": acc.get("cash"), "asof": acc.get("ts")},
+         "equity_by_day": [{"date": e["date"], "total": e["total"], "regime": e.get("regime"), "cap": e.get("cap")} for e in equity],
+-        "regime_by_day": regimes,
+-        "trades": trade_results(rows, acc),
+-        "decisions": dict(Counter(x["action"] for x in rows if x["kind"] == "decision" and x.get("mode") != "view")),   # 판단 갱신(주문 없음) 회차는 뺌
+-        "decision_confidence": watch_confidence(rows, p),
++        "regime_by_day": {k:regimes[k] for k in sorted(regimes)[-limit:]},
++        "trades": trade_results(rows, acc,scope='competition',start=start,limit=limit),
++        "trade_summary":summary['closed'],
++        "decisions":summary['decisions'],
++        "decision_confidence":confidence,
++        "decision_confidence_distribution":histogram,
+         "decision_confidence_note": "매매 회차에서 관망한 후보의 확신도. 코드 보정(하락장 · RSI)을 더한 값이라 매수 기준과 바로 비교할 수 있음",
+         "buy_threshold_now": C.buy_threshold(p),
+-        "blocks_by_rule": dict(Counter(x["rule"] for x in rows if x["kind"] == "block")),
++        "blocks_by_rule":summary['blocks'],
+         "costs_note": "키움 모의서버 실제 비용은 매수·매도 수수료 각 0.35%, 매도 세금 0.2% (왕복 약 0.9%). 보유 중 return_after_costs 는 이를 반영한 값",
+         "last_weekly_review": {"time": review["time"], "suggestion": review["suggestion"]} if review else None,
+-        "decision_outcomes": outcomes(rows),
++        "decision_outcomes": outcomes(rows,maximum_cases=limit),
+         "lessons_now": (C.read_json(LESSONS, {}) or {}).get("lessons", []),
+-        "tuning_history": history(rows)[-12:],
++        "tuning_history":summary['tuning_tail'],
+         "cooldown_keys": cd,
+         "max_changes_per_run": rl["max_changes_per_run"],
+         "tunable": {k: {**v, "current": get_value(p, k), "cooldown": k in cd} for k, v in rl["keys"].items()},
++        'detail_scope':{'maximum_items':limit,'supported_after':checkpoint['supported_after'] if checkpoint else None,
++            'full_history':False,'confidence_values_truncated':sum(x['count'] for x in histogram)>limit,
++            'trade_summary_kind':'legacy_price_return_not_net_pnl','competition_totals_preserved':True},
+     }
++    if len(S.canonical(result).encode())>limits['bytes']:
++        return {'status':'capacity_blocked','reason':'tuning_context_bytes_limit','detail_scope':result['detail_scope']}
++    return result
+ 
+ 
  LESSONS = os.path.join(C.WORK, "lessons.json")   # 11-06 조정 실행이 남긴 '판단 점검 교훈' → 다음 판단 브리핑에 실림
  
  
 -def outcomes(rows):
-+def outcomes(rows, snapshot=None, audit=None):
++def outcomes(rows, snapshot=None, audit=None, *, maximum_cases=None):
      """11-06 S.Lee: 지난 판단이 맞았는지 결과로 채점. 판단한 날 종가(체결은 체결가) → 지금 가격.
      관망했는데 +2% 넘게 오름 = 놓침(조정) · 내림 = 관망 맞음(유지) / 보유했는데 −3% 넘게 내림 = 안 판 게 손해(조정)
      매수했는데 오름 = 맞음(유지) · 내림 = 틀림(조정) / 매도했는데 내림 = 맞음(유지) · +2% 넘게 오름 = 너무 일찍 팖(조정).
@@ -59,7 +212,7 @@ index bf1fdae..4a4eee3 100644
          return (r.get("closes") or [None])[-1] if r else None
  
      def close_on(code, d):
-@@ -156,19 +168,36 @@ def outcomes(rows):
+@@ -156,19 +203,39 @@ def outcomes(rows):
          n = C.business_days(d, date.fromisoformat(asof))
          return cl[-1 - n] if 0 <= n < len(cl) else None
  
@@ -87,6 +240,9 @@ index bf1fdae..4a4eee3 100644
 +        if audit is not None and key in refs:
 +            audit["excluded"].append({"row_index": refs[key], "reason": "superseded_same_day_action"})
 +        last[key], refs[key] = x, index
++        if maximum_cases is not None and len(last)>maximum_cases:
++            return {'status':'capacity_blocked','reason':'outcome_cases_limit','complete':False,
++                    'summary':{},'adjust':[],'keep':[]}
      res = []
      for (code, d, act), x in last.items():
          p0 = x.get("price") if act in ("매수", "매도") else (x.get("price") or close_on(code, d))
@@ -100,7 +256,7 @@ index bf1fdae..4a4eee3 100644
              continue
          ret = p1 / p0 - 1
          if act == "관망":
-@@ -180,6 +209,8 @@ def outcomes(rows):
+@@ -180,6 +247,8 @@ def outcomes(rows):
          else:
              v = "맞음 (유지)" if ret < 0 else "너무 일찍 팖 (조정)" if ret >= .02 else "중립"
          conf = x.get("confidence_adj", x.get("confidence"))
@@ -109,38 +265,42 @@ index bf1fdae..4a4eee3 100644
          res.append({"date": d, "code": code, "name": x.get("name"), "action": act, "confidence": conf, "ret_since": round(ret, 4), "verdict": v,
                      "bull": (x.get("bull") or "")[:140], "bear": (x.get("bear") or "")[:140]})
      summary = defaultdict(Counter)
-@@ -273,6 +304,12 @@ def _fmt(v):
+@@ -273,50 +342,47 @@ def _fmt(v):
  
  
  def write_params(ok):
-+    import policy_registry
-+    with policy_registry.change_lock():
-+        return _write_params_locked(ok)
+-    """params.json 의 해당 숫자만 바꿔 씀 (주석·줄 배치를 지켜 diff 가 작게). 안 되면 통째로 다시 씀."""
+-    with open(PARAMS_PATH, encoding="utf-8") as f:
+-        text = f.read()
+-    new = text
+-    for x in ok:
+-        leaf = x["key"].split(".", 1)[1]
+-        pat = re.compile(r'("' + re.escape(leaf) + r'"\s*:\s*)-?\d+(?:\.\d+)?')
+-        if len(pat.findall(new)) != 1:
+-            new = None
+-            break
+-        new = pat.sub(lambda m: m.group(1) + _fmt(x["to"]), new)
+-    want = C.params()
+-    for x in ok:
+-        sec, leaf = x["key"].split(".", 1)
+-        want[sec][leaf] = x["to"]
+-    if new is None or json.loads(new) != want:
+-        new = json.dumps(want, ensure_ascii=False, indent=2) + "\n"
+-    tmp = PARAMS_PATH + ".tmp"
+-    with open(tmp, "w", encoding="utf-8") as f:
+-        f.write(new)
+-    os.replace(tmp, PARAMS_PATH)
+-
+-
+-def apply(changes, summary):
+-    rl, p = rules(), C.params()
++    raise ValueError('DIRECT_TUNING_WRITES_RETIRED_USE_CHANGE_APPLICATION')
 +
 +
 +def _write_params_locked(ok):
-     """params.json 의 해당 숫자만 바꿔 씀 (주석·줄 배치를 지켜 diff 가 작게). 안 되면 통째로 다시 씀."""
-     with open(PARAMS_PATH, encoding="utf-8") as f:
-         text = f.read()
-@@ -285,9 +322,12 @@ def write_params(ok):
-             break
-         new = pat.sub(lambda m: m.group(1) + _fmt(x["to"]), new)
-     want = C.params()
-+    before = json.loads(json.dumps(want))
-     for x in ok:
-         sec, leaf = x["key"].split(".", 1)
-         want[sec][leaf] = x["to"]
-+    import policy_registry
-+    want = policy_registry.after_legacy_tuning(before, want)
-     if new is None or json.loads(new) != want:
-         new = json.dumps(want, ensure_ascii=False, indent=2) + "\n"
-     tmp = PARAMS_PATH + ".tmp"
-@@ -296,15 +336,42 @@ def write_params(ok):
-     os.replace(tmp, PARAMS_PATH)
- 
- 
--def apply(changes, summary):
--    rl, p = rules(), C.params()
++    raise ValueError('DIRECT_TUNING_WRITES_RETIRED_USE_CHANGE_APPLICATION')
++
++
 +def submission_error(rl=None):
 +    """Shared preflight for every tuning write, including briefing lessons."""
      run = os.environ.get("RUN_ID", "")
@@ -149,8 +309,24 @@ index bf1fdae..4a4eee3 100644
 +    rl = rl or rules()
      if not allowed_today(rl):
          return {"ok": False, "error": "기준값 조정은 평일에만 반영합니다."}
-     if run and any(r.get("run") == run for r in history()):
+-    if run and any(r.get("run") == run for r in history()):
++    if run and any(r['kind']=='tune' for r in C.journal_run_rows(C.read_jsonl(C.JOURNAL),run)):
          return {"ok": False, "error": "이번 실행에서 이미 제출했습니다."}
+-    ok, bad = check(changes, p, rl, cooldown_keys(rl=rl))
+-    if ok:
+-        trial = json.loads(json.dumps(p))
+-        for x in ok:
+-            sec, leaf = x["key"].split(".", 1)
+-            trial[sec][leaf] = x["to"]
+-        errs = consistency(trial)
+-        if errs:
+-            bad += [{"key": x["key"], "to": x["to"], "reason": x["reason"], "rejected": " / ".join(errs)} for x in ok]
+-            ok = []
+-    if ok:
+-        write_params(ok)
+-    C.journal("tune", summary=str(summary).strip()[:300], applied=ok, rejected=bad)
+-    return {"ok": True, "applied": ok, "rejected": bad,
+-            "note": "반영된 값은 다음 정기 판단부터 적용됩니다." if ok else "바뀐 값이 없습니다 (유지)."}
 +    return None
 +
 +
@@ -176,17 +352,5 @@ index bf1fdae..4a4eee3 100644
 +
 +
 +def _apply_authorized(changes, summary, lessons):
-+    rl, p = rules(), C.params()
-     ok, bad = check(changes, p, rl, cooldown_keys(rl=rl))
-     if ok:
-         trial = json.loads(json.dumps(p))
-@@ -318,5 +385,9 @@ def apply(changes, summary):
-     if ok:
-         write_params(ok)
-     C.journal("tune", summary=str(summary).strip()[:300], applied=ok, rejected=bad)
-+    if lessons:
-+        saved = [str(x)[:200] for x in lessons][:6]
-+        C.write_json(LESSONS, {"time": C.stamp(), "lessons": saved})
-+        C.journal("lessons", lessons=saved)
-     return {"ok": True, "applied": ok, "rejected": bad,
-             "note": "반영된 값은 다음 정기 판단부터 적용됩니다." if ok else "바뀐 값이 없습니다 (유지)."}
++    import change_registry
++    return change_registry.submit_tuning(changes, summary, lessons)

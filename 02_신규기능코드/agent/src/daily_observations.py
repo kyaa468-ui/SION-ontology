@@ -220,6 +220,11 @@ def collect_daily_observations(code, dates, calendar, provider=None, knowledge_a
         receipt['receipt_id'] = 'daily-' + S.digest(receipt)[:32]
         try:
             S.archive('daily_receipts', receipt['receipt_id'], receipt)
+            try:
+                import legacy_assessments
+                legacy_assessments.mark_correction(code,receipt['receipt_id'])
+            except Exception as exc:
+                result.setdefault('improvement_errors',[]).append({'receipt_id':receipt['receipt_id'],'reason':'correction_callback_failed','detail':str(exc)})
             if not any(x.get('receipt_id') == receipt['receipt_id'] for x in receipts):
                 receipts.append(receipt)
             result['observations'] = [receipt]

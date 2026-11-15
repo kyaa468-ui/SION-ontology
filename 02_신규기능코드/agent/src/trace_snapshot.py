@@ -21,7 +21,7 @@ import record_store
 import storage_objects as objects
 
 VERSION = 'TRACE_SNAPSHOT@v1'
-_ID = re.compile(r'view-[a-f0-9]{32}\Z')
+_ID = re.compile(r'view-(?:[0-9]{8}-)?[a-f0-9]{32}\Z')
 
 
 class SnapshotError(ValueError):
@@ -51,7 +51,7 @@ def _write_immutable(path, body):
     if path.name == 'projection.json' and path.parent.parent == root() / 'snapshots':
         record_store.publish(path, body, kind='trace_view', exclusive=False)
     else:
-        try: objects.publish_json(path, body)
+        try: record_store.publish_control(path, body)
         except FileExistsError:
             if objects.file_fingerprint(path) != objects.fingerprint(body):
                 raise SnapshotError('IMMUTABLE_VIEW_CONFLICT')
@@ -157,7 +157,7 @@ def _failure(view_id, operation, exc):
 def build_view_snapshot(market_as_of=None, knowledge_as_of=None):
     import trace_query as Q
     import research_evidence as RE
-    view_id = 'view-' + uuid.uuid4().hex
+    view_id = 'view-' + C.now().strftime('%Y%m%d') + '-' + uuid.uuid4().hex
     operation = 'projection'
     try:
         captured_sources = _capture_sources()
@@ -211,6 +211,8 @@ def load_view_snapshot(view_id):
     try:
         identifier = _identifier(view_id)
         folder = root() / 'snapshots' / identifier
+        import archive_reclamation
+        archive_reclamation.require_available(C.ontology_root(),folder/'manifest.json')
         if not folder.exists():
             return {'status': 'unavailable', 'view_id': identifier, 'errors': [{'reason': 'VIEW_NOT_FOUND'}]}
         if not (folder / 'commit.json').exists():
@@ -243,5 +245,5 @@ def load_view_snapshot(view_id):
         return {'status': 'recording_error', 'view_id': view_id,
                 'errors': [{'reason': 'COMMITTED_VIEW_COMPONENT_MISSING'}]}
     except Exception as exc:
-        return {'status': 'protected' if 'HOLDOUT' in str(exc) else 'recording_error',
+        return {'status': 'expired' if 'EXPIRED' in str(exc) else 'protected' if 'HOLDOUT' in str(exc) else 'recording_error',
                 'view_id': view_id, 'errors': [{'reason': str(exc)}]}

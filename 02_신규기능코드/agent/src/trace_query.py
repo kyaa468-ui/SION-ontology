@@ -29,7 +29,7 @@ STORE_FORMATS = {'scoring': 'immutable-scoring-record@v1',
 IDENTIFIERS = {'attempts': 'run_attempt_id', 'coverage_events': 'event_id', 'coverage_errors': 'error_id',
     'judgments': 'judgment_id', 'submissions': 'event_id', 'deliveries': 'delivery_id', 'selections': 'run_id',
     'case_review/jobs': 'review_id', 'case_review/results': 'review_id', 'case_review/datasets': 'review_id',
-    'case_review/publication_commits': 'review_id', 'case_review/model_publications': 'publication_id',
+    'case_review/publication_commits': 'review_id', 'case_review/result_commits':'review_id', 'case_review/model_publications': 'publication_id',
     'learning_proposals/contexts': 'proposal_run_id', 'learning_proposals/context_commits': 'proposal_run_id',
     'learning_proposals/proposals': 'proposal_id', 'learning_proposals/submissions': 'submission_id',
     'policy_validation/specs': 'validation_id', 'policy_validation/spec_commits': 'validation_id',
@@ -275,6 +275,8 @@ def _research(reader, reservations):
     jobs = reader.scan('case_review/jobs')
     review_results = {r['review_id']: r for r in reader.scan('case_review/results')}
     commits = {r['review_id']: r for r in reader.scan('case_review/publication_commits')}
+    result_commits={r['review_id']:r for r in reader.scan('case_review/result_commits')}
+    commits.update(result_commits)
     datasets = {r['review_id']: r for r in reader.scan('case_review/datasets')}
     review_submissions = reader.scan('case_review/review_submissions')
     known_jobs = {r['review_id'] for r in jobs}
@@ -295,7 +297,8 @@ def _research(reader, reservations):
         commit = commits.get(rid)
         proof = bool(result and data and commit and not job.get('origin_missing')
                      and result.get('input_hash') == data.get('input_hash')
-                     and all(publications.get(p, {}).get('review_id') == rid for p in commit.get('publication_ids', []))
+                     and (rid in result_commits or all(publications.get(p, {}).get('review_id') == rid for p in commit.get('publication_ids', [])))
+                     and (rid not in result_commits or bool(commit.get('result_hash')))
                      and (not commit.get('result_hash') or commit['result_hash'] == checked_digest(result)))
         own_errors = [e for e in review_errors if e.get('review_id') == rid]
         review_status = ('recording_error' if own_errors or job.get('origin_missing') else
@@ -305,7 +308,7 @@ def _research(reader, reservations):
             'status': review_status, 'errors': own_errors + (result or {}).get('errors', []),
             'completion_proof': {'status': 'verified' if proof else 'unavailable',
                 'result_hash_bound_by_commit': bool(commit and commit.get('result_hash')),
-                'meaning': 'stored_envelopes_and_input_binding; legacy_publication_marker_has_no_result_hash'},
+                'meaning': 'model_independent_result_commit' if rid in result_commits else 'stored_envelopes_and_input_binding; legacy_publication_marker_has_no_result_hash'},
             'result_hash': checked_digest(result) if result else None,
             'application_ids': sorted(_application_ids(data or {})), 'ai_submissions': own,
             'visibility': 'available', 'recording_status': 'recorded' if proof else 'incomplete'})

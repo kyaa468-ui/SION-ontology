@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import uuid
+from contextvars import ContextVar
 from pathlib import Path
 
 import common as C
@@ -18,6 +19,12 @@ import record_store
 FORMAT = 'SIGMA_SEMANTIC@v1'
 ROLES = ('interpretation', 'bull', 'bear', 'lead')
 STATES = ('adopted', 'rejected', 'deferred', 'unreviewed')
+FROZEN_RUNTIME = ContextVar('semantic_frozen_runtime', default=None)
+
+
+def _timestamp():
+    runtime=FROZEN_RUNTIME.get()
+    return runtime.chain['created_at'] if runtime is not None else C.now().isoformat()
 
 
 class SemanticError(ValueError):
@@ -37,6 +44,9 @@ def required():
 
 
 def _identity():
+    if FROZEN_RUNTIME.get() is not None:
+        runtime = FROZEN_RUNTIME.get()
+        return runtime.attempt_id, runtime.role
     role = os.environ.get('SION_SEMANTIC_ROLE')
     attempt = os.environ.get('RUN_ATTEMPT_ID')
     if not required() or role not in ROLES or not attempt:
@@ -57,11 +67,15 @@ def _path(kind, identifier, attempt=None):
 
 
 def _read(kind, identifier, attempt=None):
+    if FROZEN_RUNTIME.get() is not None:
+        return FROZEN_RUNTIME.get().read(kind, identifier)
     path = _path(kind, identifier, attempt)
     return record_store.load(path) if path.exists() else None
 
 
 def _write(kind, identifier, value):
+    if FROZEN_RUNTIME.get() is not None:
+        return FROZEN_RUNTIME.get().write(kind, identifier, value)
     record_store.publish(_path(kind, identifier), value, kind='semantic_' + kind)
 
 
@@ -76,7 +90,8 @@ def _missing_definitions():
 def _current():
     import policy_registry as PR
     params = C.params()
-    return {'definitions_hash': digest(definitions()), 'params': params,
+    from change_registry import base_revision
+    return {'improvement_revision': base_revision(), 'definitions_hash': digest(definitions()), 'params': params,
             'policy': PR.snapshot(params), 'buy_threshold': C.buy_threshold(params),
             'probe_floor': C.probe_floor(params), 'risk_limits': C.risk_limits(),
             'regime': C.latest_regime(),
@@ -87,6 +102,8 @@ def _current():
 
 
 def _fresh(chain):
+    if FROZEN_RUNTIME.get() is not None:
+        return FROZEN_RUNTIME.get().assert_fresh(chain)
     targets()  # A newly discovered subject must also stop stale downstream use.
     if digest(chain['effective']) != digest(_current()):
         raise SemanticError('SEMANTIC_CONTEXT_CHANGED', 'Start a new judgment attempt; historical results are retained')
@@ -200,6 +217,7 @@ def context(code=None, confidence_for=None):
 def contract(role):
     common = {'no_numeric_risk_model': True, 'unknown_is_not_absent': True,
               'references': 'IDs of claims/paths/assessments actually provided in this input; preserve original IDs',
+              'assessment_specs': 'Optional assessments: original text, claim_id, path_id, kind (fact/future/set_condition/aggregate/interpretation/mechanism), fields with unit/method/source/definition_id, start_at/end_at, explicit expected_observations, expression using registered all/any/sum/mean/count/compare/and/or/not/value/literal/difference/ratio. Missing semantics remains unsupported; never replace it with MA20.',
               'evidence': 'arguments use existing fact_claim/source_quote/hypothesis and compact wire declarations; adoption is assigned by server until lead'}
     if role == 'interpretation':
         return {**common, 'required': ['arguments', 'paths'],
@@ -244,7 +262,7 @@ def _arguments(data, chain, prior):
     if not raw:
         return [], [], []
     for a in raw:
-        a['proposer'] = os.environ['SION_SEMANTIC_ROLE']
+        a['proposer'] = _identity()[1]
         a['adoption'] = 'reference'
     wire = {k: copy.deepcopy(data[k]) for k in ('wire_format', 'bundle_refs', 'delivery_ids') if k in data}
     normalized = W.normalize_judgment({**wire, 'arguments': raw})
@@ -362,6 +380,9 @@ def _submit(input_id, data):
     if old:
         if old['request_hash'] != request_hash:
             raise SemanticError('SEMANTIC_ACCEPTED_STAGE_IMMUTABLE')
+        if old.get('assessment_specs') and FROZEN_RUNTIME.get() is None:
+            import assessment_contracts as AC
+            AC.register_stage(old, payload['chain'], old['assessment_specs'])
         return {'status': 'accepted', 'stage_id': key, 'judgment_id': old.get('judgment_id'), 'idempotent': True}
     for p in payload['predecessors']:
         actual = _read('stages', p['stage_id'])
@@ -372,7 +393,7 @@ def _submit(input_id, data):
     row = {'format': FORMAT, 'stage_id': key, 'chain_id': cid, 'run_attempt_id': attempt,
            'role': role, 'runtime_call_id': attempt + '-' + role, 'input_id': input_id, 'input_hash': incoming['payload_hash'],
            'predecessor_ids': [p['stage_id'] for p in payload['predecessors']],
-           'created_at': C.now().isoformat(), 'request_hash': request_hash, 'status': 'accepted',
+           'created_at': _timestamp(), 'request_hash': request_hash, 'status': 'accepted',
            'qualitative_validity': 'unverified'}
     if role != 'lead':
         arguments, raw, wire = _arguments(data, chain, all_arguments)
@@ -493,17 +514,36 @@ def _submit(input_id, data):
                              'joint_buy_interpretation_paths': joint, 'salient_risk_path_ids': salient, 'salient_risk_count': risk_count,
                              'adopted_joint_buy_interpretation_paths': adopted_joint, 'path_adoptions': path_adoptions,
                              'unreviewed_ids': [d['evaluation_id'] for d in dispositions if d['state'] == 'unreviewed']}}
-        result = J.record_ai_judgments([item])[0]
+        result = (FROZEN_RUNTIME.get().accept_final(item) if FROZEN_RUNTIME.get() is not None
+                  else J.record_ai_judgments([item])[0])
         if result.get('status') != 'accepted':
             raise SemanticError('SEMANTIC_FINAL_REJECTED', json.dumps(result, ensure_ascii=False))
         row.update(judgment_id=result['judgment_id'], decision=item['semantic'],
                    confidence_raw=data['confidence_raw'], confidence_band_id=data['confidence_band_id'])
+    import assessment_contracts as AC
+    specs = data.get('assessments', [])
+    if not isinstance(specs, list) or len(specs) > 20:
+        raise SemanticError('SEMANTIC_ASSESSMENT_LIMIT')
+    known_ids = {x['id'] for x in all_arguments + all_paths}
+    row['assessment_specs'] = [AC.normalize(x, known_ids=known_ids, code=chain['code'], origin_at=chain['created_at'], registered_at=_timestamp()) for x in specs]
     _fresh(chain)
     try:
         _write('stages', key, row)
     except FileExistsError:
         if _read('stages', key)['request_hash'] != request_hash:
             raise SemanticError('SEMANTIC_ACCEPTED_STAGE_IMMUTABLE')
+    if row['assessment_specs'] and FROZEN_RUNTIME.get() is None:
+        AC.register_stage(row, chain, row['assessment_specs'])
+    if role=='lead' and FROZEN_RUNTIME.get() is None:
+        AC.mark_usage(chain,row['judgment_id'],adopted_closure,
+                      [p for p,adoption in path_adoptions.items() if adoption['claims_covered'] and adoption['adopted_evaluation_ids']])
+    if FROZEN_RUNTIME.get() is None:
+        import semantic_dependencies as SD
+        facts=[e for a in row.get('arguments',[]) for e in a.get('evidence_snapshots',[])]
+        SD.register(chain,role,records=[{'id':e['observation_id']} for e in facts if e.get('observation_id')],
+            queries=[{'type':'instrument_relation','filters':{'code':chain['code']},
+                      'definition_id':'semantic-target-query@v1','as_of':chain['created_at'],
+                      'completeness':'recorded_scope_only'}])
     return {'status': 'accepted', 'stage_id': key, 'judgment_id': row.get('judgment_id')}
 
 
@@ -536,6 +576,15 @@ def consume(code, side, confidence, judgment_id, *, rule_exit=False, stage='plan
     _write('consumptions', 'use-' + uuid.uuid4().hex,
            {'stage': stage, 'judgment_id': judgment_id, 'chain_id': chain['chain_id'], 'input_id': final['input_id'],
             'confidence_raw': judgment['confidence_raw'], 'created_at': C.now().isoformat()})
+    try:
+        import change_observation
+        change_observation.consume(chain['effective']['improvement_revision'], attempt_id=chain['run_attempt_id'],
+            judgment_id=judgment_id, stage=stage, evidence_ref=final['input_id'])
+    except Exception as exc:
+        try:
+            import case_store
+            case_store.record_error(chain['run_attempt_id'],'improvement_consumption',exc)
+        except Exception:pass
     return judgment['confidence_raw']
 
 

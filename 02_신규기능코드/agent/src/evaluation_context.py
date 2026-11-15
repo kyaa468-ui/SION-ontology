@@ -46,17 +46,22 @@ def _read(path, default, errors, *, lines=False, missing_ok=False):
         return copy.deepcopy(value),source
     try:
         dependencies = {}
-        value = (log_store.capture(log_store.view(path)) if lines else
-                 record_store.load_input(path) if path.name in ('briefing.json','prep_rows.json') else
-                 record_store.load(path, dependencies=dependencies))
+        if lines:
+            view=log_store.view(path);value=log_store.capture(view)
+        else:
+            value=(record_store.load_input(path) if path.name in ('briefing.json','prep_rows.json') else
+                   record_store.load(path, dependencies=dependencies))
         if not lines and path.name not in ('briefing.json','prep_rows.json'):
             stored=record_store.manifest(path)
             if isinstance(stored,dict) and stored.get('format')==record_store.FORMAT:
                 objects.verify_closure(stored['object_ref'],base=record_store.base_for(path),dependencies=dependencies)
                 commit=record_store.commit_path(path)
                 dependencies[str(commit.absolute())]=objects.file_fingerprint(commit)[0]
-        sha, size = objects.file_fingerprint(path)
+        sha,size=(view.digest,view.size) if lines else objects.file_fingerprint(path)
         source = {'path':str(path), 'sha256':sha, 'bytes':size}
+        if lines:
+            import journal_retention
+            source['journal_watermark']=journal_retention.watermark(view)
         if dependencies:
             source['snapshot_dependencies'] = dependencies
         if scope is not None:
@@ -91,6 +96,8 @@ An older market target never rewrites `today` or the host timezone quote rule.
         # Capture that absence explicitly; it is not a failed archive write.
         values[key], sources[key] = _read(path, default, errors, missing_ok=True)
     rows, sources["journal"] = _read(C.JOURNAL, [], errors, lines=True, missing_ok=True)
+    try:C.journal_require_date(rows,cutoff.astimezone(C.KST).date().isoformat())
+    except ValueError as exc:errors.append({'reason':'journal_detail_expired','error':str(exc)})
     params, sources["params"] = _read(Path(C.CONFIG) / "params.json", {}, errors)
     # Journal timestamps describe the entry, not proof of when an old file was
     # available. Keep the original array and explicit source indices as well.
@@ -115,7 +122,7 @@ An older market target never rewrites `today` or the host timezone quote rule.
     audit = {}
     try:
         outcomes = tuning.outcomes(selected, snapshot=values, audit=audit)
-        trades = tuning.trade_results(selected, values["account"])
+        trades = tuning.trade_results(selected, values["account"],scope='competition',start=start)
     except Exception as exc:
         outcomes, trades = None, []
         errors.append({"reason": "legacy_calculation_error", "error": f"{type(exc).__name__}: {exc}"})
@@ -127,6 +134,8 @@ An older market target never rewrites `today` or the host timezone quote rule.
         "snapshot_role": "current_snapshot_reference",
         "historical_availability": "not_reconstructed; source timestamps retained only where present",
         "journal_time_policy": "legacy common.stamp timestamps interpreted in KST; not evidence of historical file availability",
+        'journal_detail_scope':{'supported_after':(C.journal_checkpoint(rows) or {}).get('supported_after'),
+                                'older_detail':'expired' if C.journal_checkpoint(rows) else 'legacy_uncompacted'},
         "inputs": values, "sources": sources, "input_hash": _hash(values),
         "missing_optional_sources": [key for key, item in sources.items() if item.get("status") == "optional_source_absent"],
         "decision_outcomes": outcomes, "legacy_trade_results": trades, "audit": audit,

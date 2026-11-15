@@ -8,6 +8,12 @@
       ]
     },
     {
+      "module": "archive_reclamation.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
       "module": "audit_inputs.py",
       "existing_engine_imports": [
         "common"
@@ -39,6 +45,19 @@
     },
     {
       "module": "case_store.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "change_application.py",
+      "existing_engine_imports": [
+        "common",
+        "tuning"
+      ]
+    },
+    {
+      "module": "change_registry.py",
       "existing_engine_imports": [
         "common"
       ]
@@ -82,6 +101,38 @@
       ]
     },
     {
+      "module": "improvement_store.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "improvement_worker.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "investigation.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "journal_checkpoint.py",
+      "existing_engine_imports": [
+        "common",
+        "logger"
+      ]
+    },
+    {
+      "module": "journal_retention.py",
+      "existing_engine_imports": [
+        "common",
+        "logger"
+      ]
+    },
+    {
       "module": "judgment_context.py",
       "existing_engine_imports": [
         "common"
@@ -119,7 +170,25 @@
       ]
     },
     {
+      "module": "model_retention.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
       "module": "ontology.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "opportunity_cases.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "order_lifecycle.py",
       "existing_engine_imports": [
         "common"
       ]
@@ -129,6 +198,12 @@
       "existing_engine_imports": [
         "common",
         "tuning"
+      ]
+    },
+    {
+      "module": "policy_proof.py",
+      "existing_engine_imports": [
+        "common"
       ]
     },
     {
@@ -194,7 +269,19 @@
       ]
     },
     {
+      "module": "research_capacity.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
       "module": "research_evidence.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "retention_inventory.py",
       "existing_engine_imports": [
         "common"
       ]
@@ -207,7 +294,31 @@
       ]
     },
     {
+      "module": "scoped_trace.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
       "module": "scoring_store.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "scoring_targets.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "semantic_dependencies.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "semantic_experiments.py",
       "existing_engine_imports": [
         "common"
       ]
@@ -217,6 +328,18 @@
       "existing_engine_imports": [
         "common",
         "monitor"
+      ]
+    },
+    {
+      "module": "semantic_patch_runtime.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "semantic_prompt_validation.py",
+      "existing_engine_imports": [
+        "common"
       ]
     },
     {
@@ -233,6 +356,24 @@
     },
     {
       "module": "snapshot_store.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "source_application.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "source_change_validation.py",
+      "existing_engine_imports": [
+        "common"
+      ]
+    },
+    {
+      "module": "storage_index.py",
       "existing_engine_imports": [
         "common"
       ]
@@ -284,62 +425,11 @@
       "existing_engine_imports": [
         "common"
       ]
-    }
-  ],
-  "file_config_dependencies": [
-    {
-      "consumer": "ontology_adapter.py / learning_proposals.py",
-      "requires": [
-        "agent/config/ontology/*.json"
-      ]
     },
     {
-      "consumer": "replay_context.py / execution_trace.py",
-      "requires": [
-        "agent/src/common.py",
-        "agent/src/sizing.py",
-        "agent/src/risk.py"
-      ]
-    },
-    {
-      "consumer": "runtime_inputs.py",
-      "requires": [
-        "agent/CLAUDE.md",
-        "agent/.claude/settings.json",
-        "agent/.claude/agents/*.md",
-        "agent/src/mcp_server.py",
-        "agent/run.py"
-      ]
-    },
-    {
-      "consumer": "semantic_layer.py",
-      "requires": [
-        "agent/config/ontology/semantic_definitions.json",
-        "agent/CLAUDE.md",
-        "agent/.claude/agents/*.md",
-        "agent/src/semantic_layer.py",
-        "agent/src/semantic_runner.py",
-        "agent/src/common.py",
-        "agent/src/sizing.py",
-        "agent/src/risk.py",
-        "agent/src/mcp_server.py",
-        "agent/src/ai_judgment.py",
-        "agent/src/judgment_coverage.py"
-      ]
-    },
-    {
-      "consumer": "semantic_runner.py / run.py",
-      "requires": [
-        "agent/.claude/agents/bull.md",
-        "agent/.claude/agents/bear.md",
-        "agent/.claude/agents/regime.md"
-      ]
-    },
-    {
-      "consumer": "tools/rehearse_semantic.py",
-      "requires": [
-        "agent/tests/test_ontology.py",
-        "agent/tests/test_judgment_integration.py"
+      "module": "workspace_reclamation.py",
+      "existing_engine_imports": [
+        "common"
       ]
     }
   ]

@@ -71,6 +71,13 @@ def main():
     data = json.loads(re.search(r'<script type="application/json" id="model-source">(.*?)</script>', html, re.S)[1])
     require(data['ontology'] == ir['ontology'], 'HTML 모델 불일치')
     require(data['bindings'] == bindings, 'HTML 매핑 불일치')
+    improvement = json.loads((root / '01_모델정의/improvement.json').read_text())
+    targets = json.loads((root / '01_모델정의/proposal_targets.json').read_text())
+    require(data.get('improvement') == improvement, 'HTML 개선 설정 불일치')
+    require(data.get('proposalTargets') == targets, 'HTML 변경 대상 불일치')
+    require(improvement.get('version') == 'IMPROVEMENT@v1', '개선 설정 형식 불일치')
+    require(targets.get('version') == 'PROPOSAL_TARGETS@v2', '변경 대상 형식 불일치')
+    require(not improvement.get('auto_apply'), '배포본에 운영 자동 적용 권한이 포함됨')
     semantics = json.loads((root / '01_모델정의/semantic_definitions.json').read_text())
     require(data.get('semanticDefinitions') == semantics, 'HTML 공통 의미 정의 불일치')
     concepts = semantics['concepts']
@@ -137,6 +144,14 @@ def main():
                     entries[name.decode()] = {'mode': mode, 'kind': kind, 'oid': oid}
             return entries
         target_tree, base_tree = tree(commit), tree(base)
+        for field, prefix in [('engine_sources', 'agent/src/'),
+                              ('configuration_sources', 'agent/'),
+                              ('runner_sources', 'agent/'), ('prompt_sources', 'agent/')]:
+            for name in targets.get(field, []):
+                path = prefix + name
+                require(path in target_tree, '원본 캡처 의존 파일 누락: ' + path)
+                require(path in base_tree or any(x['source'] == path for x in manifest['copied_files']),
+                        '분리본 캡처 의존 파일 누락: ' + path)
         for item in manifest['copied_files']:
             require(target_tree[item['source']]['mode'] == item['mode'], '원본 권한 불일치: ' + item['source'])
             require(digest(git('show', commit + ':' + item['source'])) == item['sha256'], '원본 불일치: ' + item['source'])
@@ -184,6 +199,9 @@ def main():
                 p.write_bytes(local(item['path']).read_bytes())
                 if item.get('mode'):
                     p.chmod(0o755 if item['mode'] == '100755' else 0o644)
+                require(digest(p.read_bytes()) == item['sha256'], '복사 복원 불일치: ' + item['source'])
+                require(('100755' if p.stat().st_mode & 0o100 else '100644') == item['mode'],
+                        '복사 복원 권한 불일치: ' + item['source'])
     if errors:
         raise ValueError('\n'.join(errors))
     print(json.dumps({'status': 'passed', 'copied_files': len(manifest['copied_files']), 'patches': len(manifest['integration_patches']), 'python_syntax_files': syntax_count, 'source_paths_verified': source_verified, 'excluded_paths_verified': len(manifest['excluded']) if args.source_repo else 0, 'sigma_base_check': sigma_checked, 'restored_to': str(args.restore_to) if args.restore_to else None}, ensure_ascii=False))

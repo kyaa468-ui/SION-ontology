@@ -44,7 +44,7 @@ def runner():
 
 def protect_trading():
     return {p: p.read_bytes() for p in Path(C.WORK).rglob('*')
-            if p.is_file() and not p.name.startswith('storage_index.sqlite3') and '/case_review/' not in str(p)}
+            if p.is_file() and not p.name.startswith(('storage_index.sqlite3','storage_publish.sqlite3')) and '/case_review/' not in str(p) and '/improvement/' not in str(p)}
 
 
 def test_real_step1_to_step5_preserves_trading_and_traces_one_case(monkeypatch, calendar):
@@ -56,7 +56,9 @@ def test_real_step1_to_step5_preserves_trading_and_traces_one_case(monkeypatch, 
     assert report['expected_count'] == 1
     assert report['comparison']['summary']['refutation_rate'] == 1
     assert report['statistics']['models'] == []  # small competition sample is expected
-    assert report['statistics']['groups'][0]['status'] in ('insufficient_data', 'unavailable')
+    assert report['statistics']['status'] == 'disabled_by_design'
+    assert S.load('result_commits',report['review_id'])
+    assert not S.records('publication_commits')['records']
     case = R.get_review_cases(report['review_id'])['cases'][0]
     assert case['application_id'] == app['application_id']
     assert case['origin_judgment_id'] == app['judgment_id']
@@ -100,7 +102,8 @@ def test_revision_is_new_frozen_report_and_no_model_leak_on_error(monkeypatch, c
     monkeypatch.setattr(ST, 'fit_groups', lambda *a, **k: {'models': [{'model_id':'partial-model', 'status':'ready'}],
                        'groups': [], 'errors': [], 'status':'timeout'})
     partial = R.build_review(revision='timeout-test')
-    assert partial['run_status'] == 'partial'
+    assert partial['run_status'] == 'awaiting_ai'
+    assert partial['statistics']['status']=='disabled_by_design'
     assert S.load('publication_commits', partial['review_id']) is None
 
 
@@ -167,6 +170,8 @@ def test_weekly_cutoff(timestamp, expected):
 
 @pytest.mark.parametrize('terminal', ['normal', 'timeout', 'error'])
 def test_real_runner_ai_omission_timeout_error(monkeypatch, terminal):
+    from test_research_capacity import configure
+    configure(monkeypatch)
     from test_case_review_tools import frozen_review
     rid = frozen_review(monkeypatch)
     run = runner()
@@ -305,11 +310,12 @@ def test_result_before_publication_commit_stays_unfinished(monkeypatch):
     from threading import Event
     at(monkeypatch, '2026-11-14T10:00:00+09:00')
     entered, proceed = Event(), Event()
-    publish = R._publish_models
-    def pause(*a):
-        entered.set(); assert proceed.wait(10)
-        return publish(*a)
-    monkeypatch.setattr(R, '_publish_models', pause)
+    publish = S.archive
+    def pause(kind,*a):
+        if kind=='result_commits':
+            entered.set(); assert proceed.wait(10)
+        return publish(kind,*a)
+    monkeypatch.setattr(S, 'archive', pause)
     with ThreadPoolExecutor(1) as pool:
         future = pool.submit(R.build_review)
         assert entered.wait(10)

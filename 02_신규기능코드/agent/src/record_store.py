@@ -43,8 +43,18 @@ def commit_path(path): return Path(str(path) + '.commit')
 
 
 def manifest(path, *, base=None):
+    import storage_leases
+    base=base or base_for(path)
+    pin=storage_leases.Pin(base)
+    try:return _manifest(path,base=base)
+    finally:pin.close()
+
+
+def _manifest(path, *, base=None):
     base = base or base_for(path)
     path = _safe(path, base)
+    import archive_reclamation
+    archive_reclamation.require_available(base, path)
     with path.open(encoding='utf-8') as stream: value = json.load(stream)
     if isinstance(value, dict) and value.get('format') == FORMAT:
         commit = _safe(commit_path(path), base)
@@ -68,6 +78,8 @@ def is_v2(path):
 
 def load(path, *, base=None, resolver=None, fields=None, dependencies=None):
     base = base or base_for(path)
+    # Pin before opening the manifest, not after reading its object reference.
+    resolver = resolver or objects.resolver_for(base, dependencies=dependencies)
     value = manifest(path, base=base)
     if isinstance(value, dict) and value.get('format') == FORMAT:
         resolver = resolver or objects.resolver_for(base, dependencies=dependencies)
@@ -123,17 +135,84 @@ def publish(path, value, *, base=None, kind='record', exclusive=True):
     """Serialize publication, including a manifest's short pre-commit interval."""
     import sqlite3
     base=Path(base or base_for(path))
-    locks=base/'locks';locks.mkdir(parents=True,exist_ok=True)
-    lock=locks/'storage_publish.sqlite3'
-    if lock.is_symlink():raise legacy.SnapshotError('RECORD_LOCK_SYMLINK_FORBIDDEN')
-    connection=sqlite3.connect(lock,timeout=30)
+    base.mkdir(parents=True, exist_ok=True)
+    import storage_leases
+    pin=storage_leases.Pin(base)
+    connection=None
     try:
+        locks=base/'locks';locks.mkdir(parents=True,exist_ok=True)
+        lock=locks/'storage_publish.sqlite3'
+        if lock.is_symlink():raise legacy.SnapshotError('RECORD_LOCK_SYMLINK_FORBIDDEN')
+        connection=sqlite3.connect(lock,timeout=30)
         connection.execute('BEGIN IMMEDIATE')
+        import archive_reclamation
+        archive_reclamation.require_publication(base,path)
         with objects.scope(base):
             result=_publish_unlocked(path,value,base=base,kind=kind,exclusive=exclusive)
+        _advance_generation(connection)
         connection.commit()
         return result
-    finally:connection.close()
+    finally:
+        try:
+            if connection is not None:connection.close()
+        finally:pin.close()
+
+
+def _advance_generation(connection):
+    connection.execute('CREATE TABLE IF NOT EXISTS generation (singleton INTEGER PRIMARY KEY CHECK(singleton=1), revision INTEGER NOT NULL)')
+    connection.execute('INSERT INTO generation VALUES (1,1) ON CONFLICT(singleton) DO UPDATE SET revision=revision+1')
+
+
+def generation(base):
+    import sqlite3
+    path=Path(base)/'locks/storage_publish.sqlite3'
+    if not path.exists(): return 0
+    if path.is_symlink(): raise legacy.SnapshotError('RECORD_LOCK_SYMLINK_FORBIDDEN')
+    with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True) as db:
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='generation'").fetchone():return 0
+        row=db.execute('SELECT revision FROM generation WHERE singleton=1').fetchone()
+        if not row:raise ValueError('STORAGE_GENERATION_UNAVAILABLE')
+        return row[0]
+
+
+def invalidate_generation(base):
+    """Invalidate prepared readers/indexes before an exclusive physical sweep."""
+    import sqlite3
+    import storage_leases
+    base=Path(base)
+    with storage_leases.exclusive(base):
+        lock=base/'locks/storage_publish.sqlite3'
+        lock.parent.mkdir(parents=True,exist_ok=True)
+        if lock.is_symlink():raise legacy.SnapshotError('RECORD_LOCK_SYMLINK_FORBIDDEN')
+        db=sqlite3.connect(lock,timeout=0)
+        try:
+            db.execute('BEGIN IMMEDIATE')
+            _advance_generation(db);db.commit()
+        finally:db.close()
+
+
+def publish_control(path,value,*,base=None,replace=False):
+    """Small pointers/commits participate in the same publication generation."""
+    import sqlite3
+    import storage_leases
+    base=Path(base or base_for(path));base.mkdir(parents=True,exist_ok=True)
+    path=_safe(path,base)
+    pin=storage_leases.Pin(base)
+    db=None
+    try:
+        lock=base/'locks/storage_publish.sqlite3';lock.parent.mkdir(parents=True,exist_ok=True)
+        if lock.is_symlink():raise legacy.SnapshotError('RECORD_LOCK_SYMLINK_FORBIDDEN')
+        db=sqlite3.connect(lock,timeout=30)
+        db.execute('BEGIN IMMEDIATE')
+        import archive_reclamation
+        archive_reclamation.require_publication(base,path)
+        result=objects.publish_json(path,value,replace=replace)
+        _advance_generation(db);db.commit()
+        return result
+    finally:
+        try:
+            if db is not None:db.close()
+        finally:pin.close()
 
 
 def write_input(path, value, *, kind='engine_input'):
@@ -144,7 +223,7 @@ def write_input(path, value, *, kind='engine_input'):
     publish(revision, value, base=base, kind=kind, exclusive=False)
     pointer = {'format': 'sigma-input@v2', 'record': str(revision.relative_to(base)),
                'logical_sha256': sha}
-    objects.publish_json(path, pointer, replace=True)
+    publish_control(path, pointer, base=base, replace=True)
     return pointer
 
 

@@ -37,7 +37,13 @@ def test_params_change_after_risk_before_dispatch_cannot_send(monkeypatch,runtim
         errors=original(*a,**kw)
         assert not errors
         checks.append(clone(kw['audit']))
-        T.write_params([{'key':'decision.buy_min_confidence','to':P['decision']['buy_min_confidence']+.01}])
+        # Simulate an external edit; the retired tuning API cannot be used to
+        # manufacture this race. The dispatch must still reject stale inputs.
+        params=C.read_json(T.PARAMS_PATH)
+        params['decision']['buy_min_confidence']=P['decision']['buy_min_confidence']+.01
+        from pathlib import Path
+        import json
+        Path(T.PARAMS_PATH).write_text(json.dumps(params))
         return errors
     monkeypatch.setattr(M.risk,'check',check_then_tune)
     result=M.place_order(**args)
@@ -49,7 +55,7 @@ def test_params_change_after_risk_before_dispatch_cannot_send(monkeypatch,runtim
     assert probe.get('status') not in ('claimed','complete')
     if active:
         assert checks[0]['confidence']['adjustments'][-1]['applied'] is True
-        assert PR.snapshot()['status']=='suspended'
+        assert PR.snapshot()['status']=='recording_error'
 
 
 def test_active_policy_briefing_judgment_plan_hook_order_watch_share_context(monkeypatch,capsys,runtime_authority):
@@ -121,7 +127,11 @@ def test_hook_revision_change_between_preflight_and_context_is_not_allowed(monke
     fake,_,_,args=planned(monkeypatch)
     original=PR.build_context
     def change_before_context(*a,**kw):
-        T.write_params([{'key':'decision.buy_min_confidence','to':P['decision']['buy_min_confidence']+.01}])
+        params=C.read_json(T.PARAMS_PATH)
+        params['decision']['buy_min_confidence']=P['decision']['buy_min_confidence']+.01
+        from pathlib import Path
+        import json
+        Path(T.PARAMS_PATH).write_text(json.dumps(params))
         return original(*a,**kw)
     monkeypatch.setattr(PR,'build_context',change_before_context)
     output=hook_call(monkeypatch,capsys,args)

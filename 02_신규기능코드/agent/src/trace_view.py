@@ -17,7 +17,8 @@ import trace_pages
 
 ASSETS = Path(__file__).resolve().parents[1] / 'review'
 _ROUTES = {'/': ('index.html', 'text/html'), '/trace.js': ('trace.js', 'text/javascript'),
-           '/trace.css': ('trace.css', 'text/css')}
+           '/trace.css': ('trace.css', 'text/css'), '/improvement': ('improvement.html','text/html'),
+           '/improvement.js': ('improvement.js','text/javascript')}
 
 
 def _accepts_gzip(header):
@@ -37,8 +38,12 @@ def create_server(view_id, port=8765):
     """Only a pinned immutable view can be served; callers can use port=0 in tests."""
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError('INVALID_PORT')
+    import storage_leases
+    trace_snapshot._identifier(view_id)
+    view_pin=storage_leases.Pin(trace_snapshot.root()/'snapshots'/view_id)
     initial = trace_snapshot.load_view_snapshot(view_id)
     if not isinstance(initial.get('projection'), dict):
+        view_pin.close()
         raise ValueError('VIEW_NOT_AVAILABLE: ' + initial.get('status', 'unknown'))
 
     class Handler(BaseHTTPRequestHandler):
@@ -95,6 +100,10 @@ def create_server(view_id, port=8765):
                     if set(query)-allowed or any(len(v)!=1 for v in query.values()):
                         return self.send_payload(404, {'status':'invalid_query'})
                     args={k:v[0] for k,v in query.items()}
+                    if parsed.path=='/api/improvement':
+                        if query:return self.send_payload(400,{'status':'invalid_query'})
+                        import improvement_worker
+                        return self.send_payload(200,improvement_worker.dashboard())
                     value=trace_snapshot.load_view_snapshot(view_id)
                     if not isinstance(value.get('projection'),dict):return self.send_payload(409,value)
                     route=parsed.path[len('/api/'):].split('/')
@@ -125,7 +134,13 @@ def create_server(view_id, port=8765):
         do_DELETE = do_POST
         do_OPTIONS = do_POST
 
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    try:server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    except BaseException:view_pin.close();raise
+    close=getattr(server,'server_close',lambda:None)
+    def close_pinned():
+        try:close()
+        finally:view_pin.close()
+    server.server_close=close_pinned
     server.daemon_threads = True
     return server
 

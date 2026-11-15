@@ -251,7 +251,16 @@ def record_evaluation(result, scoring_job_id=None):
                     'evaluator_definition_id': definition['definition_id'], 'semantic_hash': semantic_hash,
                     'created_at': C.now().isoformat(), 'scoring_job_id': scoring_job_id,
                     'supersedes': predecessors, 'newer_revision_ids': newer, 'recording_status': 'recorded'}
-            return {**S.archive('evaluations', identifier, body), 'recording_status': 'recorded'}
+            saved = {**S.archive('evaluations', identifier, body), 'recording_status': 'recorded'}
+            try:
+                import independent_cases
+                independent_cases.evaluated(result['premise_application_id'],saved)
+            except Exception as exc:
+                try:
+                    import case_store
+                    case_store.record_error(identifier,'independent_case_evaluation',exc)
+                except Exception:pass
+            return saved
     except Exception as exc:
         error = S.record_error(scoring_job_id, 'record_evaluation', exc)
         return {**copy.deepcopy(result), 'recording_status': 'recording_error', 'error': error}

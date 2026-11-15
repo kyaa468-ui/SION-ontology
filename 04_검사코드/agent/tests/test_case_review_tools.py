@@ -249,18 +249,21 @@ def test_denied_tuning_preserves_lessons_journal_and_params(monkeypatch, denied)
     assert files() == before
 
 
-def test_valid_tuning_retains_partial_numeric_policy_and_saves_lessons(monkeypatch):
+def test_tuning_submits_investigation_without_mutating_params_or_lessons(monkeypatch):
     target = tuning_files(monkeypatch)
     changes = [{'key': 'decision.buy_min_confidence', 'to': P['decision']['buy_min_confidence'] + .01,
                 'reason': 'allowed fixture'},
                {'key': 'risk_limits.max_positions', 'to': 999, 'reason': 'forbidden fixture'}]
-    expected_ok, expected_bad = M.tuning.check(changes, clone(P), M.tuning.rules(), [])
+    before_params=read_stored(target)
+    before_lessons=C.read_json(M.tuning.LESSONS)
     result = M.apply_tuning(changes, 'local fixture', ['new lesson'])
     assert result['ok'] is True
-    assert result['applied'] == expected_ok and result['rejected'] == expected_bad
-    assert read_stored(target)['decision']['buy_min_confidence'] == expected_ok[0]['to']
-    assert C.read_json(M.tuning.LESSONS)['lessons'] == ['new lesson']
-    assert [x['kind'] for x in C.read_jsonl(C.JOURNAL)] == ['tune', 'lessons']
+    assert result['applied']==[] and result['status']=='investigation_pending'
+    assert read_stored(target)==before_params
+    assert C.read_json(M.tuning.LESSONS)==before_lessons
+    assert [x['kind'] for x in C.read_jsonl(C.JOURNAL)] == ['tune']
+    import improvement_store as IS
+    assert IS.get('tuning_request',result['proposal_id'])['payload']['changes']==changes
     before = files()
     assert M.apply_tuning([], 'duplicate', ['replacement'])['ok'] is False
     assert files() == before
@@ -272,7 +275,7 @@ def test_parallel_duplicate_tuning_has_one_authorized_submission(monkeypatch):
         # Call the shared writer directly: it also guards non-MCP callers.
         results = list(pool.map(lambda n: M.tuning.apply([], str(n), [str(n)]), [1, 2]))
     assert sorted(x['ok'] for x in results) == [False, True]
-    assert [x['kind'] for x in C.read_jsonl(C.JOURNAL)] == ['tune', 'lessons']
+    assert [x['kind'] for x in C.read_jsonl(C.JOURNAL)] == ['tune']
 
 
 def test_registered_regime_id_links_original_row_and_frozen_classification(monkeypatch):

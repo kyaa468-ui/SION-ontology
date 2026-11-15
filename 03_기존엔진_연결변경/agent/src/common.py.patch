@@ -1,10 +1,11 @@
 diff --git a/agent/src/common.py b/agent/src/common.py
-index 8b145fa..fdf663b 100644
+index 8b145fa..0cc623e 100644
 --- a/agent/src/common.py
 +++ b/agent/src/common.py
-@@ -1,8 +1,10 @@
+@@ -1,8 +1,11 @@
  """경로·설정·작업 파일·날짜 계산 등 모든 모듈이 같이 쓰는 도구."""
  import json
++import hashlib
 +import copy
  import math
  import os
@@ -13,7 +14,7 @@ index 8b145fa..fdf663b 100644
  from datetime import date, datetime, timedelta, timezone
  
  try:
-@@ -60,8 +62,11 @@ def mode():
+@@ -60,8 +63,11 @@ def mode():
  def read_json(path, default=None):
      try:
          with open(path, encoding="utf-8") as f:
@@ -26,7 +27,16 @@ index 8b145fa..fdf663b 100644
          return default
  
  
-@@ -80,20 +85,88 @@ def append_jsonl(path, row):
+@@ -74,26 +80,97 @@ def write_json(path, data):
+ 
+ 
+ def append_jsonl(path, row):
++    if os.path.abspath(path)==os.path.abspath(JOURNAL):
++        import journal_retention
++        return journal_retention.append(row)
+     os.makedirs(os.path.dirname(path), exist_ok=True)
+     with open(path, "a", encoding="utf-8") as f:
+         f.write(json.dumps(row, ensure_ascii=False) + "\n")
  
  
  def read_jsonl(path):
@@ -123,7 +133,7 @@ index 8b145fa..fdf663b 100644
      append_jsonl(JOURNAL, row)
      return row
  
-@@ -103,6 +176,15 @@ def risk_limits():
+@@ -103,6 +180,15 @@ def risk_limits():
  
  
  def params():
@@ -139,17 +149,17 @@ index 8b145fa..fdf663b 100644
      return read_json(os.path.join(CONFIG, "params.json"))
  
  
-@@ -133,7 +215,8 @@ def week_factor(p=None, d=None):
+@@ -133,7 +219,8 @@ def week_factor(p=None, d=None):
  
  
  def fill_count():
 -    return sum(1 for r in read_jsonl(JOURNAL) if r["kind"] == "fill")
 +    rows=read_jsonl(JOURNAL);summary=_journal_totals(rows,today().isoformat())
-+    return sum(1 for row in rows if row['kind']=='fill') if summary['invalid'] else summary['fills']
++    return sum(1 for row in rows if row['kind']=='fill')+(journal_checkpoint(rows) or {}).get('all',{}).get('fills',0) if summary['invalid'] else summary['fills']
  
  
  def probe_floor(p=None):
-@@ -154,7 +237,7 @@ def buy_threshold(p=None):
+@@ -154,7 +241,7 @@ def buy_threshold(p=None):
  
  
  def briefing_row(code, briefing=None):
@@ -158,7 +168,7 @@ index 8b145fa..fdf663b 100644
      return next((r for r in b.get("candidates", []) + b.get("holdings", []) if r.get("code") == code), None)
  
  
-@@ -272,16 +355,18 @@ def stock_value(holdings, p=None):
+@@ -272,16 +359,18 @@ def stock_value(holdings, p=None):
  
  def sold_today(code):
      """오늘 이 종목을 판 적이 있는지 (체결 기록 기준). 판 종목은 그날 다시 사지 않음 (decision.no_rebuy_same_day)."""
@@ -183,7 +193,7 @@ index 8b145fa..fdf663b 100644
  
  
  def gross_take(net, p=None, tax=None):
-@@ -320,16 +405,20 @@ def exit_levels(code, p=None, briefing=None):
+@@ -320,16 +409,20 @@ def exit_levels(code, p=None, briefing=None):
      return d["stop_loss_pct"], d["take_profit_pct"], d["max_hold_days"]
  
  
@@ -207,7 +217,7 @@ index 8b145fa..fdf663b 100644
      row = next((r for r in b.get("candidates", []) + b.get("holdings", []) if r.get("code") == code), None) or {}
      bad_news = any(n.get("risk") for n in row.get("news", []))
      add, notes = 0.0, []
-@@ -347,6 +436,14 @@ def conf_boost(code, side, conf, p=None, briefing=None, regime=None):
+@@ -347,6 +440,14 @@ def conf_boost(code, side, conf, p=None, briefing=None, regime=None):
          elif side == "매도" and rsi >= cfg["sell_at"]:
              add += cfg["add"]
              notes.append(f"{tag} {rsi} ≥ {cfg['sell_at']} 과열 매도 +{cfg['add']:.2f}")
@@ -222,7 +232,7 @@ index 8b145fa..fdf663b 100644
      mb = p.get("market_boost")
      if mb and side == "매수":
          regime = regime if regime is not None else (latest_regime() or {}).get("regime")
-@@ -356,7 +453,44 @@ def conf_boost(code, side, conf, p=None, briefing=None, regime=None):
+@@ -356,7 +457,44 @@ def conf_boost(code, side, conf, p=None, briefing=None, regime=None):
              else:
                  add += mb["add"]
                  notes.append(f"{regime} 국면 매수 +{mb['add']:.2f}")
@@ -268,7 +278,15 @@ index 8b145fa..fdf663b 100644
  
  
  def _slot(t=None):
-@@ -401,9 +535,11 @@ def next_trade_time(t=None, p=None):
+@@ -388,6 +526,7 @@ def missed_trade(t=None, p=None, rows=None):
+         return None
+     last, d = due[-1], (t or now()).date().isoformat()
+     rows = read_jsonl(JOURNAL) if rows is None else rows
++    journal_require_date(rows,d)
+     done = any(r["kind"] == "regime" and r.get("mode") == "decide" and r["time"].startswith(d) and r["time"][11:16] >= last
+                for r in rows)
+     return None if done else last
+@@ -401,9 +540,11 @@ def next_trade_time(t=None, p=None):
  
  def latest_regime():
      """오늘 기록된 마지막 시장 국면 (없으면 None)."""
@@ -283,7 +301,15 @@ index 8b145fa..fdf663b 100644
  
  
  def prior_judgments(n=2, rows=None, run=None):
-@@ -458,10 +594,41 @@ def market_of(code, p=None, markets=None):
+@@ -412,6 +553,7 @@ def prior_judgments(n=2, rows=None, run=None):
+     rows = read_jsonl(JOURNAL) if rows is None else rows
+     run = os.environ.get("RUN_ID", "") if run is None else run
+     t = today().isoformat()
++    journal_require_date(rows,t)
+     runs = []
+     for x in rows:
+         if x["kind"] == "regime" and x["time"].startswith(t) and x.get("run") and x["run"] != run and x["run"] not in runs:
+@@ -458,10 +600,78 @@ def market_of(code, p=None, markets=None):
  _EXCH = None
  
  
@@ -316,7 +342,8 @@ index 8b145fa..fdf663b 100644
 +    """Pure source-bundled reducer, also executable by the frozen engine."""
 +    cached=getattr(rows,'_journal_summary',None)
 +    if cached is not None and cached[0]==date:return cached[1]
-+    result={'fills':0,'sold':set(),'buys':{},'latest_regime':None,'invalid':False}
++    checkpoint=journal_require_date(rows,date)
++    result={'fills':(checkpoint or {}).get('all',{}).get('fills',0),'sold':set(),'buys':{},'latest_regime':None,'invalid':False}
 +    for row in rows:
 +        if not isinstance(row,dict) or 'kind' not in row:
 +            result['invalid']=True;continue
@@ -329,3 +356,39 @@ index 8b145fa..fdf663b 100644
 +                elif row.get('side')=='매수':result['buys'][row.get('code')]=result['buys'].get(row.get('code'),0)+1
 +        elif kind=='regime' and isinstance(when,str) and when.startswith(date):result['latest_regime']=row
 +    return result
++
++
++def journal_checkpoint(rows):
++    """Pure frozen-input contract: the checkpoint is state, never a fake fill."""
++    cached=getattr(rows,'_journal_checkpoint',None)
++    if cached is not None:return cached or None
++    first=next(iter(rows),None)
++    if not isinstance(first,dict) or first.get('kind')!='journal_checkpoint':return None
++    body=first.get('checkpoint')
++    if not isinstance(body,dict) or body.get('version')!='JOURNAL_CHECKPOINT@v1':
++        raise ValueError('JOURNAL_CHECKPOINT_UNSUPPORTED')
++    raw=json.dumps(body,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
++    if len(raw)>2*1024*1024 or hashlib.sha256(raw).hexdigest()!=first.get('sha256'):
++        raise ValueError('JOURNAL_CHECKPOINT_CORRUPT')
++    if len(body.get('retired_runs',''))!=65536:raise ValueError('JOURNAL_RUN_FILTER_CORRUPT')
++    try:rows._journal_checkpoint=body
++    except AttributeError:pass
++    return body
++
++
++def journal_require_date(rows,date):
++    checkpoint=journal_checkpoint(rows)
++    if checkpoint and str(date)[:10]<checkpoint['supported_after']:
++        raise ValueError('JOURNAL_DETAIL_EXPIRED')
++    return checkpoint
++
++
++def journal_run_rows(rows,run):
++    checkpoint=journal_require_date(rows,today().isoformat())
++    if checkpoint and run:
++        bits=bytes.fromhex(checkpoint['retired_runs'])
++        hashed=hashlib.sha256(str(run).encode()).digest()
++        positions=[int.from_bytes(hashed[i:i+4],'big')%(len(bits)*8) for i in range(0,28,4)]
++        if all(bits[p//8]&(1<<(p%8)) for p in positions):
++            raise ValueError('JOURNAL_RUN_EXPIRED_OR_CHECKPOINT_COLLISION')
++    return (row for row in rows if row.get('run')==run and row.get('kind')!='journal_checkpoint')

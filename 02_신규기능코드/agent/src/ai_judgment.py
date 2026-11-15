@@ -444,6 +444,8 @@ def _premises(items, context, claim_ids, jid):
 
 
 def _context():
+    if (_FROZEN.get() or {}).get('context'):
+        return dict(_FROZEN.get()['context'])
     return {'run_attempt_id': os.environ.get('RUN_ATTEMPT_ID', ''), 'run_id': os.environ.get('RUN_ID', '')}
 
 
@@ -577,6 +579,7 @@ def _reserve_request(item, content_hash):
             _fail('IDEMPOTENCY_CONFLICT', 'request_key', 'Changed submission requires a new request_key, including rejected submissions')
 
 
+@__import__('scoring_targets').acceptance_guard
 def record_ai_judgments(items):
     """Serialize each request through its acceptance event, across MCP processes."""
     values = items if isinstance(items, list) else [items]
@@ -624,21 +627,44 @@ def _record_ai_judgments(items):
             if old:
                 if old['request_hash'] != content_hash:
                     _fail('IDEMPOTENCY_CONFLICT', 'request_key', 'Changed submission requires a new request_key')
+                import scoring_targets
+                scoring_targets.recover(jid)
                 results.append({'status': 'accepted', 'judgment_id': jid, 'idempotent': True,
                                 'premise_application_ids': [p['application_id'] for p in old['premise_applications']]})
                 continue
             _reserve_request(item, content_hash)
-            normalized = W.normalize_judgment(item)
-            row = _validate(normalized, content_hash, jid)
-            event_id = f'submission-{uuid.uuid4().hex}'
-            row['acceptance_event_id'] = event_id
-            for premise in row['premise_applications']:
-                if premise['judgment_id'] == jid:
-                    _archive('premises', premise['application_id'], premise)
-            for proposal in row['premise_proposals']:
-                _archive('premise_proposals', proposal['proposal_id'], proposal)
+            # Resume the exact validated body after a pre-acceptance crash.
+            # Deleting only its manifest leaves the v2 commit/index behind;
+            # regenerating premise IDs also changes an otherwise identical retry.
+            staged = _load('judgments', jid)
+            if staged:
+                if staged.get('request_hash') != content_hash or staged.get('run_attempt_id') != _context()['run_attempt_id']:
+                    _fail('IDEMPOTENCY_CONFLICT', 'request_key', 'Persisted submission differs from the retry')
+                row = objects.materialize(staged)
+                event_id = row['acceptance_event_id']
+                for kind, field, id_key in (('premises','premise_applications','application_id'),
+                                            ('premise_proposals','premise_proposals','proposal_id')):
+                    for source in row[field]:
+                        saved = _load(kind, source[id_key])
+                        if not saved or _digest(saved) != _digest(source):
+                            raise RuntimeError('STAGED_JUDGMENT_SOURCE_UNAVAILABLE')
+            else:
+                if _path('judgments', jid).exists() or record_store.commit_path(_path('judgments', jid)).exists():
+                    raise RuntimeError('STAGED_JUDGMENT_INCOMPLETE')
+                normalized = W.normalize_judgment(item)
+                row = _validate(normalized, content_hash, jid)
+                event_id = f'submission-{uuid.uuid4().hex}'
+                row['acceptance_event_id'] = event_id
+            import scoring_targets
+            scoring_targets.prepare(row)
+            if not staged:
+                for premise in row['premise_applications']:
+                    if premise['judgment_id'] == jid:
+                        _archive('premises', premise['application_id'], premise)
+                for proposal in row['premise_proposals']:
+                    _archive('premise_proposals', proposal['proposal_id'], proposal)
             try:
-                _archive('judgments', jid, row)
+                if not staged:_archive('judgments', jid, row)
             except FileExistsError:
                 # Concurrent identical retries converge on the persisted acceptance.
                 old = load_judgment(jid)
@@ -646,27 +672,27 @@ def _record_ai_judgments(items):
                     results.append({'status': 'accepted', 'judgment_id': jid, 'idempotent': True})
                     continue
                 raise
-            try:
+            with scoring_targets.acceptance_transaction(row):
                 _event(item, 'accepted', judgment_id=jid, event_id=event_id)
-            except Exception:
-                # Not committed: no caller has received acceptance; allow a later retry.
-                _path('judgments', jid).unlink(missing_ok=True)
-                raise
             results.append({'status': 'accepted', 'judgment_id': jid, 'idempotent': False,
                             'premise_application_ids': [p['application_id'] for p in row['premise_applications']],
                             'premise_proposal_ids': [p['proposal_id'] for p in row['premise_proposals']],
                             'fact_summaries': [a['server_summary'] for a in row['arguments'] if 'server_summary' in a]})
-            # Research predictions are a separate side record. They are never
-            # returned to the trading AI and cannot undo the acceptance commit.
+            # Independent comparison context is captured at the producer, not
+            # reconstructed from the entire history on each weekly review.
             try:
-                import case_prediction
-                case_prediction.record_new_premises(row)
+                import runtime_policy_inputs
+                runtime_policy_inputs.capture(row)
             except Exception as exc:
-                try:
-                    import case_store
-                    case_store.record_error(None, 'new_premise_prediction', exc)
-                except Exception:
-                    print(f'case prediction recording_error: {type(exc).__name__}: {exc}', file=sys.stderr)
+                import case_store
+                case_store.record_error(None,'runtime_policy_input_capture',exc)
+            try:
+                import independent_cases
+                independent_cases.capture(row)
+            except Exception as exc:
+                import case_store
+                case_store.record_error(None,'independent_case_capture',exc)
+            # Regular prediction generation ended in plan 4; historical records remain readable.
         except (InvalidSubmission, W.WireError) as exc:
             try:
                 event = _event(item, 'rejected', [exc.error])

@@ -238,7 +238,7 @@ def test_missing_vs_actual_zero_flow_and_period_dates_not_model_strata(monkeypat
     assert '2026-11-04' not in json.dumps(actual_zero['stratum'])
 
 
-def test_prediction_hook_once_and_failure_cannot_change_judgment_coverage(monkeypatch):
+def test_prediction_hook_retired_and_independent_capture_failure_cannot_change_coverage(monkeypatch):
     import case_prediction
     text, _ = traced_delivery(monkeypatch)
     calls = []
@@ -250,10 +250,12 @@ def test_prediction_hook_once_and_failure_cannot_change_judgment_coverage(monkey
     judgment, app = accept(item)
     accepted_again = M.record_ai_judgments([item])[0]
     assert accepted_again['status'] == 'accepted' and accepted_again['idempotent']
-    assert calls == [judgment['judgment_id']]
+    assert calls == []
     assert JC.get_coverage()['recording_status'] == 'recorded'
     assert JC.get_coverage()['counts']['accepted_unlinked'] == 1
-    assert CS.errors()['records'][0]['operation'] == 'new_premise_prediction'
+    assert not any(r.get('operation')=='new_premise_prediction' for r in CS.errors()['records'])
+    import improvement_store as IS
+    assert IS.get('premise_case',app['application_id'])
 
 
 def test_actual_corrected_daily_window_keeps_one_case_and_past_projection(monkeypatch, calendar):

@@ -1,5 +1,5 @@
 diff --git a/agent/.claude/hooks/risk_check.py b/agent/.claude/hooks/risk_check.py
-index d2c47c2..066a903 100644
+index d2c47c2..12a6891 100644
 --- a/agent/.claude/hooks/risk_check.py
 +++ b/agent/.claude/hooks/risk_check.py
 @@ -4,6 +4,7 @@
@@ -10,7 +10,7 @@ index d2c47c2..066a903 100644
  import json
  import os
  import sys
-@@ -21,30 +22,122 @@ def deny(reason):
+@@ -21,30 +22,126 @@ def deny(reason):
      sys.exit(0)
  
  
@@ -32,7 +32,7 @@ index d2c47c2..066a903 100644
          return
 +    # Research has no trading targets. Reject before opening the old coverage,
 +    # execution reservation, or account/quote paths (including retry shortcuts).
-+    if os.environ.get("RUN_MODE") in ("case_review", "proposal_review", "validation_review", "prompt_validation", "review", "tune"):
++    if os.environ.get("RUN_MODE") in ("case_review", "proposal_review", "validation_review", "prompt_validation", "review", "tune", "investigation", "semantic_experiment"):
 +        deny("회고·튜닝 실행에서는 주문하지 않습니다.")
      import broker
      import common as C
@@ -79,7 +79,11 @@ index d2c47c2..066a903 100644
 +            if not identifier:
 +                intent = [E.account_scope(), os.environ.get("RUN_ATTEMPT_ID"), event.get("session_id"), E.intent_fingerprint(payload)]
 +                identifier = "order-" + hashlib.sha256(json.dumps(intent,sort_keys=True).encode()).hexdigest()[:40]
-+            reserved = E.reserve_attempt(E.account_scope(), plan_id=o.get("plan_id"), attempt_id=identifier)
++                import order_lifecycle
++                reserved=order_lifecycle.reserve_intent(E.account_scope(),identifier,os.environ.get('RUN_ATTEMPT_ID'),
++                    plan_id=o.get('plan_id'),legacy_identifier=identifier)
++            else:
++                reserved = E.reserve_attempt(E.account_scope(), plan_id=o.get("plan_id"), attempt_id=identifier)
 +            attempt_id = reserved.get("order_attempt_id")
 +            if reserved.get("ok") is False or not attempt_id:
 +                outcome = {"status": "blocked", "reason": "dispatch_guard_error", "guard": reserved}

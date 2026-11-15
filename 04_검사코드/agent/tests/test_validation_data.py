@@ -14,6 +14,12 @@ import judgment_coverage as JC
 
 
 def proposal(monkeypatch):
+    from test_research_capacity import configure
+    configure(monkeypatch)
+    import retention_store as RS
+    import retention_policy as RP
+    from test_improvement import calendar as fixture_calendar
+    monkeypatch.setattr(RS,'current_boundary',lambda *_:RP.boundaries(fixture_calendar()))
     run,context,page=source(monkeypatch)
     result=P.record_learning_proposals(run['proposal_run_id'],'validation-proposal',[item(context,page)])
     assert result['status']=='accepted',result

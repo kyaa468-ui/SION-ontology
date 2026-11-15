@@ -24,6 +24,8 @@ def _summary(row):
 
 
 def _choose_model(case, origin_at):
+    import model_retention
+    model_retention.require_origins([origin_at])
     cutoff = ST.instant(origin_at)
     publications = S.records('model_publications')
     if publications['errors']:
@@ -59,6 +61,10 @@ def _choose_model(case, origin_at):
 
 def record_new_premises(judgment):
     """Fail-open bookkeeping, called after the acceptance commit, never on replay."""
+    import model_retention
+    if model_retention.enabled():
+        return {'items':[], 'recording_status':'recorded', 'status':'disabled_by_design',
+                'reason':'legacy_prediction_namespace_closed'}
     import case_dataset as D
     results = []
     for application in judgment.get('premise_applications', []):
@@ -341,6 +347,9 @@ outcome revision changes this evaluation, never the original probabilities.
 
 
 def prospective_performance(cases, calendar, knowledge_as_of, deadline=None):
+    import model_retention as M
+    if M.enabled():
+        return _scoped_prospective_performance(cases,calendar,knowledge_as_of,deadline)
     read = S.records('predictions')
     targets = S.records('prediction_targets')
     failed = S.errors()
@@ -368,3 +377,40 @@ def prospective_performance(cases, calendar, knowledge_as_of, deadline=None):
     if result['errors']:
         result.update(status='incomplete', coverage_rate=None)
     return result
+
+
+def _scoped_prospective_performance(cases, calendar, knowledge_as_of, deadline):
+    """After retirement, a small case query never scans all forecast bodies."""
+    import model_retention as M
+    if len(cases)>200:
+        raise ValueError('MODEL_CASE_SCOPE_LIMIT')
+    try:
+        M.require_origins([c.get('origin_at') for c in cases])
+        forecasts=[];errors=[]
+        cutoff=ST.instant(knowledge_as_of)
+        for case in cases:
+            identifier=case['application_id']
+            pid='prediction-'+S.digest([PREDICTION_VERSION,identifier])
+            prediction=S.load('predictions',pid)
+            target=S.load('prediction_targets',pid)
+            if prediction:
+                forecasts.append(prediction);continue
+            own=[]
+            for error in S.iter_records('errors',filters={'operation':'prospective_prediction:'+identifier},errors=errors):
+                if ST.instant(error['recorded_at'])<=cutoff:own.append(error)
+            failure=max(own,key=lambda r:r['recorded_at'],default=None)
+            if target and ST.instant(target['started_at'])>cutoff:target=None
+            if target or failure:
+                forecasts.append({'kind':'prospective','application_id':identifier,'prediction_id':pid,
+                    'created_at':failure['recorded_at'] if failure else target['started_at'],
+                    'status':'recording_error' if failure else 'unfinished',
+                    'reason':failure['error'] if failure else 'acceptance_callback_started_without_durable_result'})
+        result=evaluate_predictions(cases,forecasts,calendar,knowledge_as_of,deadline=deadline)
+        result['errors'].extend(errors)
+        if result['errors']:result.update(status='incomplete',coverage_rate=None)
+        return result
+    except M.DetailExpired as exc:
+        return {'kind':'prospective','status':'expired','requested_count':len(cases),
+            'expected_count':None, 'target_set_incomplete':True,
+            'groups':[], 'targets':[], 'errors':[{'reason':str(exc)}], 'coverage_rate':None,
+            'interpretation':'historical_model_detail_not_available; no performance claim'}

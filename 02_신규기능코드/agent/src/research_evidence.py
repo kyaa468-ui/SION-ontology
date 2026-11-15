@@ -214,8 +214,19 @@ def validate_claim(claim, catalog):
 
 
 def _use(owner_id, application_ids, source_refs, purpose, kind):
+    # A single lock order is required for concurrent investigation reads:
+    # improvement state -> immutable usage key -> record publication.
+    import improvement_store as IS
+    with IS.transaction():
+        return _use_impl(owner_id,application_ids,source_refs,purpose,kind)
+
+
+def _use_impl(owner_id, application_ids, source_refs, purpose, kind):
     if not isinstance(owner_id,str) or not owner_id or not isinstance(purpose,str) or not purpose:
         raise ValueError('USAGE_ID_AND_PURPOSE_REQUIRED')
+    import archive_reclamation
+    if archive_reclamation._VIEW.fullmatch(owner_id):
+        archive_reclamation.require_available(C.ontology_root(),C.ontology_root()/'trace_view/snapshots'/owner_id/'manifest.json')
     if not isinstance(application_ids,(list,tuple)) or any(not isinstance(x,str) or not x for x in application_ids):
         raise ValueError('INVALID_APPLICATION_IDS')
     import validation_holdout as VH
@@ -226,12 +237,18 @@ def _use(owner_id, application_ids, source_refs, purpose, kind):
     uid = 'usage-'+S.digest(base)
     old = S.load('usage_events',uid)
     if old:
+        import research_usage_ledger
+        research_usage_ledger.record_source('usage_events',uid,old)
         return old
     body = {**base,'usage_id':uid,'created_at':C.now().isoformat()}
     # Serializing the same id is short; a same-content retry never rewrites time.
     with S.locked(uid):
         old = S.load('usage_events',uid)
-        return old if old else S.archive('usage_events',uid,body)
+        if old:
+            import research_usage_ledger
+            research_usage_ledger.record_source('usage_events',uid,old)
+            return old
+        return S.archive('usage_events',uid,body)
 
 
 def reserve_usage(owner_id, application_ids, source_refs=None, purpose='discovery'):
@@ -248,6 +265,8 @@ def usage_status(application_ids):
     if not isinstance(application_ids,(list,tuple)) or any(not isinstance(x,str) or not x for x in application_ids):
         raise ValueError('INVALID_APPLICATION_IDS')
     wanted = sorted(set(application_ids))
+    import research_usage_ledger
+    if research_usage_ledger.enabled():return research_usage_ledger.status(wanted)
     reads = {kind:S.records(kind) for kind in ('usage_events','research_usage','datasets')}
     errors = [e for value in reads.values() for e in value['errors']]
     references = {key:[] for key in wanted}

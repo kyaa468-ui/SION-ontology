@@ -1,10 +1,10 @@
 {
   "format": "SIGMA_SIX_STRUCTURE_EXTRACT@v2",
   "created_at": "2026-11-07T15:08:16.196530+09:00",
-  "updated_at": "2026-11-14T19:30:17.950003+09:00",
+  "updated_at": "2026-11-15T17:31:09.017657+09:00",
   "source_repository": "https://github.com/kyaa468-ui/SION",
-  "source_commit": "251a61d2b739db9dcee72b0ce0c9b0ddf82cfe63",
-  "previous_source_commit": "9332219befde5e580089d44fb35e89961f308433",
+  "source_commit": "48332581593fd476d811af761c347fce899cca2e",
+  "previous_source_commit": "251a61d2b739db9dcee72b0ce0c9b0ddf82cfe63",
   "baseline_commit": "25f7da455f025720564ccd56ced36df4ea3ece1b",
   "baseline_repository": "original Sigma baseline Git object",
   "destination": ".",
@@ -33,10 +33,17 @@
       "mode": "100644"
     },
     {
+      "source": "agent/config/ontology/improvement.json",
+      "path": "01_모델정의/improvement.json",
+      "sha256": "713dae21dad45ac9deed6c89615483d1524544b8b2088c520a06f5067e3dae6c",
+      "bytes": 1176,
+      "mode": "100644"
+    },
+    {
       "source": "agent/config/ontology/proposal_targets.json",
       "path": "01_모델정의/proposal_targets.json",
-      "sha256": "69fc2db559f16d0dbe1eed42d9410c6440b6354620e026f8b194de225e644b5e",
-      "bytes": 11037,
+      "sha256": "0805db78e545d4e5712829a1ecbde08bd54a76a7cb3f6d4151ebe5835f84cc0f",
+      "bytes": 13092,
       "mode": "100644"
     },
     {
@@ -61,10 +68,24 @@
       "mode": "100644"
     },
     {
+      "source": "agent/review/improvement.html",
+      "path": "02_신규기능코드/agent/review/improvement.html",
+      "sha256": "c475ff02331db58c4200736fe915d170185499eaa2c24baf9b75b4dba1937b15",
+      "bytes": 845,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/review/improvement.js",
+      "path": "02_신규기능코드/agent/review/improvement.js",
+      "sha256": "08c609b155ba1f8ad760050f3800da26d3210ee425616a4833941267fc03162f",
+      "bytes": 2431,
+      "mode": "100644"
+    },
+    {
       "source": "agent/review/index.html",
       "path": "02_신규기능코드/agent/review/index.html",
-      "sha256": "2af286e116d7a8a15e1023013d8e67de16de0a1a11528df7001f22fab1fa0d16",
-      "bytes": 1623,
+      "sha256": "3c6b966db13a555f77a4374e4cb33dc1b07542cc11b51dd95f71b963806ce4ff",
+      "bytes": 1663,
       "mode": "100644"
     },
     {
@@ -84,8 +105,29 @@
     {
       "source": "agent/src/ai_judgment.py",
       "path": "02_신규기능코드/agent/src/ai_judgment.py",
-      "sha256": "f001ab01463ca1707b494a322c153a316c0958037201443d1758104ee52d9087",
-      "bytes": 58758,
+      "sha256": "eb67b2a7807bda0e9fa65df27390b5ce9da6ffcf742d54f51ae510c53c8e2aa0",
+      "bytes": 60465,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/archive_reclamation.py",
+      "path": "02_신규기능코드/agent/src/archive_reclamation.py",
+      "sha256": "3e7cb67138c7df3561910f7d7e60dc3d0e2fe06fc0f12b9cec22841765d4a8ee",
+      "bytes": 19833,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/assessment_contracts.py",
+      "path": "02_신규기능코드/agent/src/assessment_contracts.py",
+      "sha256": "3cc8b30280ef293e69a5a841b7217ee4337f4ffb78eb47ce8516713c80355a47",
+      "bytes": 17583,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/assessment_observations.py",
+      "path": "02_신규기능코드/agent/src/assessment_observations.py",
+      "sha256": "f3d4d9b21483715ea46faa4c0260f5dae0d5dc37232eff121fd4f771e95ab318",
+      "bytes": 4340,
       "mode": "100644"
     },
     {
@@ -98,22 +140,22 @@
     {
       "source": "agent/src/case_dataset.py",
       "path": "02_신규기능코드/agent/src/case_dataset.py",
-      "sha256": "46a74994d858edd3b7ecd4572b9946702fea083a0f1aca6ac983b35881f80646",
-      "bytes": 35669,
+      "sha256": "172ad6d16fe6469e4505029cc964943a22f2b0875989e8d39e6a5d277611d55b",
+      "bytes": 35922,
       "mode": "100644"
     },
     {
       "source": "agent/src/case_prediction.py",
       "path": "02_신규기능코드/agent/src/case_prediction.py",
-      "sha256": "17165c3b0b419a2297cae62c03a0338e00745f84fc7e86a39de2662d7156c175",
-      "bytes": 22536,
+      "sha256": "4370cee159e76dd679f1d7f3100aecc0170a45f6b7799e7cb3f62a2b62e67f56",
+      "bytes": 25116,
       "mode": "100644"
     },
     {
       "source": "agent/src/case_review.py",
       "path": "02_신규기능코드/agent/src/case_review.py",
-      "sha256": "2018d6100caac32e337b3cf804e6d61e25bbd6fa5cb5c1b6e660077dd4ca450a",
-      "bytes": 29785,
+      "sha256": "a44ed3e6dd26116c851dfe7c9d011355b9165d7f77554da8b5355eaaaee297c8",
+      "bytes": 28787,
       "mode": "100644"
     },
     {
@@ -126,15 +168,36 @@
     {
       "source": "agent/src/case_store.py",
       "path": "02_신규기능코드/agent/src/case_store.py",
-      "sha256": "11760b50c143ada6061c027ed9153b6e373a430c49ebbd86cef59af52bbee519",
-      "bytes": 5587,
+      "sha256": "b7f684a6f802f9ca120cc34f642efd41f175a6020a00039c5cd1da17eb525a4d",
+      "bytes": 5999,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/change_application.py",
+      "path": "02_신규기능코드/agent/src/change_application.py",
+      "sha256": "e84db64da9e0be3c811bd7f6826cd18d883fc14cf9136404db604f20b28aa412",
+      "bytes": 15582,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/change_observation.py",
+      "path": "02_신규기능코드/agent/src/change_observation.py",
+      "sha256": "df71e3bf5b4c255d9bbbbfe1e076a681fc10da4ba65f3c6c350446586e17c926",
+      "bytes": 5796,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/change_registry.py",
+      "path": "02_신규기능코드/agent/src/change_registry.py",
+      "sha256": "64f697d99a30cacba01f4273dcaec2128bc578c2d7fe8867ea06ea9d566386d9",
+      "bytes": 6226,
       "mode": "100644"
     },
     {
       "source": "agent/src/close_evaluation.py",
       "path": "02_신규기능코드/agent/src/close_evaluation.py",
-      "sha256": "d212b1a6af510af63716cf2779cf86b2175c6f7316fa265cee14509e443f11ed",
-      "bytes": 18528,
+      "sha256": "e2517ac1c6d99bbf8b5a9700fb8e3a1fb2ee413c6e9975b8b6db99e7aa6c1a5c",
+      "bytes": 20833,
       "mode": "100644"
     },
     {
@@ -147,15 +210,15 @@
     {
       "source": "agent/src/daily_observations.py",
       "path": "02_신규기능코드/agent/src/daily_observations.py",
-      "sha256": "f70583869d5f5bfe5916f69dfd3d653f0b1520c96c7d2534186e132aedd144be",
-      "bytes": 13818,
+      "sha256": "c9af1b53ee220d093b635144368d63f4c71d0148cb6da445e724745421e064c1",
+      "bytes": 14153,
       "mode": "100644"
     },
     {
       "source": "agent/src/evaluation_context.py",
       "path": "02_신규기능코드/agent/src/evaluation_context.py",
-      "sha256": "a899e5518f68af759d3b84014888a3a953e0b94edb68fd5f80ef6fe15786836d",
-      "bytes": 22118,
+      "sha256": "57d6e64319557b9cf8b0756a4fa5f683bcc0497b6a033a81fbcc49b8020ed18c",
+      "bytes": 22749,
       "mode": "100644"
     },
     {
@@ -175,15 +238,99 @@
     {
       "source": "agent/src/execution_reconcile.py",
       "path": "02_신규기능코드/agent/src/execution_reconcile.py",
-      "sha256": "9afea3d9135e158a63d2d930a87623180d8d0aa9287b116cbe8416f309c93c95",
-      "bytes": 12635,
+      "sha256": "3125379ac3cda61603b8f2cf621f7d0644400f1dca1d7a5a85e7a159a431566e",
+      "bytes": 12898,
       "mode": "100644"
     },
     {
       "source": "agent/src/execution_trace.py",
       "path": "02_신규기능코드/agent/src/execution_trace.py",
-      "sha256": "70191aaca8762a8189ed4c52da9fbe146dc532e24109739bac47911240e6e2e1",
-      "bytes": 46201,
+      "sha256": "6fc39e1d961d1f74c862bdd501c137ab8ca6b5cd44945423c82900c2840d534f",
+      "bytes": 46679,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/exposure_checkpoint.py",
+      "path": "02_신규기능코드/agent/src/exposure_checkpoint.py",
+      "sha256": "adb33c8c6371ba57da3cc7ca364a6240dff1e6d63cf128ff6864df2acda45573",
+      "bytes": 3383,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/holdout_scopes.py",
+      "path": "02_신규기능코드/agent/src/holdout_scopes.py",
+      "sha256": "76694bd209cb5a1c580804e247df55bed586d624219fbec465256c287a1ce80f",
+      "bytes": 5662,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/improvement_issues.py",
+      "path": "02_신규기능코드/agent/src/improvement_issues.py",
+      "sha256": "69bef49fc56ac6e6365cacb0934f07c2f6c84e0c94224f88c37082bdb816989d",
+      "bytes": 4636,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/improvement_notifications.py",
+      "path": "02_신규기능코드/agent/src/improvement_notifications.py",
+      "sha256": "f9bfdb011a63eae5135a704b486f4061a63dc1571842b8d3844c79463a7bffcf",
+      "bytes": 3725,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/improvement_store.py",
+      "path": "02_신규기능코드/agent/src/improvement_store.py",
+      "sha256": "468d9e6f06f5461670bfc56dc9a529691ffdbfd1c1491e566b0a4a51d0c3cc37",
+      "bytes": 8023,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/improvement_validation.py",
+      "path": "02_신규기능코드/agent/src/improvement_validation.py",
+      "sha256": "60cd6f5afcc6799c0e39250aee0f1139bc5183e843bee0baaad91458b8fa0b73",
+      "bytes": 4949,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/improvement_worker.py",
+      "path": "02_신규기능코드/agent/src/improvement_worker.py",
+      "sha256": "96074ed41af4ebcae7acce7b0c9dff6f670dcaef89c377a3c815ae0745b08216",
+      "bytes": 6474,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/independent_cases.py",
+      "path": "02_신규기능코드/agent/src/independent_cases.py",
+      "sha256": "6612dfac8ed976d2f24a620e516fbb92817c0b0277dbd7158c153a69322b1781",
+      "bytes": 9942,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/investigation.py",
+      "path": "02_신규기능코드/agent/src/investigation.py",
+      "sha256": "6925459130a2c3a4bf14712ad23d27ad41cd3cf153236d0fee80efae09e4fa57",
+      "bytes": 15794,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/investigation_checks.py",
+      "path": "02_신규기능코드/agent/src/investigation_checks.py",
+      "sha256": "2cddf5b5b8e120018e6e83c8694461bb7860aced047778b9059f7aa2f15042d7",
+      "bytes": 2055,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/journal_checkpoint.py",
+      "path": "02_신규기능코드/agent/src/journal_checkpoint.py",
+      "sha256": "99a9484c0eb9a301033702c79d9f79c8293a393ac12e946f25e58d9d166cab75",
+      "bytes": 5671,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/journal_retention.py",
+      "path": "02_신규기능코드/agent/src/journal_retention.py",
+      "sha256": "f73a72b6ed61a60c9264e93bdfeeab93053c193ba8f5a37572beb7f79c057873",
+      "bytes": 17543,
       "mode": "100644"
     },
     {
@@ -196,15 +343,22 @@
     {
       "source": "agent/src/judgment_coverage.py",
       "path": "02_신규기능코드/agent/src/judgment_coverage.py",
-      "sha256": "5991a92e9b5398493bd731c606c37518f2315325fb33ceca56e8de965b0e3071",
-      "bytes": 23096,
+      "sha256": "acee89ccaecbca4b5609a68d4e387db4c96b1a638a567eed5e8d83cee6e28320",
+      "bytes": 23993,
       "mode": "100644"
     },
     {
       "source": "agent/src/learning_proposals.py",
       "path": "02_신규기능코드/agent/src/learning_proposals.py",
-      "sha256": "b94990640685aa654240b945b0eb373078446cefc6983bd25e2e73de252390a3",
-      "bytes": 38285,
+      "sha256": "bdaeae9e05757f523012976f39ef362301ffb386ecd8cff2805cdad6251895c3",
+      "bytes": 38565,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/legacy_assessments.py",
+      "path": "02_신규기능코드/agent/src/legacy_assessments.py",
+      "sha256": "a9e36590d13fe8dba3430c15f1d981d98a9baaf2a7e266656ff449ea611a759b",
+      "bytes": 2967,
       "mode": "100644"
     },
     {
@@ -217,8 +371,8 @@
     {
       "source": "agent/src/log_store.py",
       "path": "02_신규기능코드/agent/src/log_store.py",
-      "sha256": "7260dae74db81b1489e4cbe08b5522bd4ab9b3ad64c2e190eeb8814da3e93838",
-      "bytes": 14405,
+      "sha256": "58ad03cd751ea304f2e193fefb6de661e4baf2c2f8c005154aeae7a730f2e083",
+      "bytes": 14816,
       "mode": "100644"
     },
     {
@@ -229,10 +383,24 @@
       "mode": "100644"
     },
     {
+      "source": "agent/src/model_retention.py",
+      "path": "02_신규기능코드/agent/src/model_retention.py",
+      "sha256": "92857393d8f42a355bdcd948be3ef90df541974b98ea7b23a2584bf978912bfc",
+      "bytes": 19680,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/observation_checks.py",
+      "path": "02_신규기능코드/agent/src/observation_checks.py",
+      "sha256": "68f90e0a530c78d12e001f5abef6b3a6d5ca73e8ebe4283ccd0860e9e993f44f",
+      "bytes": 4001,
+      "mode": "100644"
+    },
+    {
       "source": "agent/src/ontology.py",
       "path": "02_신규기능코드/agent/src/ontology.py",
-      "sha256": "879ff8e84d50a8bf74c4716d7abe02fbe467ee616af7c16c8d450cacdf6533b1",
-      "bytes": 48632,
+      "sha256": "966ddb9079538b07bf262bdd3234fcbc8e64c4d982de0560080cbcfcd2b9d553",
+      "bytes": 49044,
       "mode": "100644"
     },
     {
@@ -243,17 +411,38 @@
       "mode": "100644"
     },
     {
+      "source": "agent/src/opportunity_cases.py",
+      "path": "02_신규기능코드/agent/src/opportunity_cases.py",
+      "sha256": "4c08339038770ef4d57bd8d491dcbe8b5f25dc9db5cd129c03c790551aea418e",
+      "bytes": 13604,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/order_lifecycle.py",
+      "path": "02_신규기능코드/agent/src/order_lifecycle.py",
+      "sha256": "e48eec3ba7912362c832e66bad83fa17916f8c32069774a939ba586a0e13f055",
+      "bytes": 14752,
+      "mode": "100644"
+    },
+    {
       "source": "agent/src/policy_adoption.py",
       "path": "02_신규기능코드/agent/src/policy_adoption.py",
-      "sha256": "0822116a994bf7592614db51a5464627936a0bdbe30b234cc27d207a2ea92851",
-      "bytes": 19274,
+      "sha256": "0a616564efdfd14e952a0898e802cb790a561586eea63dcb659a28b2c29a09fc",
+      "bytes": 20659,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/policy_proof.py",
+      "path": "02_신규기능코드/agent/src/policy_proof.py",
+      "sha256": "fff0c1d20897a3532a2181a13f929f8ad020e8df731a23010c80687cadb30022",
+      "bytes": 8489,
       "mode": "100644"
     },
     {
       "source": "agent/src/policy_registry.py",
       "path": "02_신규기능코드/agent/src/policy_registry.py",
-      "sha256": "377dac1272022c349a124755f7806ad865114718ff7504e0f93c39609fa98f38",
-      "bytes": 18392,
+      "sha256": "9043e78a7f661c684e655f7703d093104f5805c70d6d6b929cafe9a82a37bd25",
+      "bytes": 17341,
       "mode": "100644"
     },
     {
@@ -266,22 +455,22 @@
     {
       "source": "agent/src/portfolio_capture.py",
       "path": "02_신규기능코드/agent/src/portfolio_capture.py",
-      "sha256": "906cf03292b96558346d34989a35f783e6ec82f45acc9e50cb62c54c60af9285",
-      "bytes": 14515,
+      "sha256": "b63684d79b85aa60e04a8b9f9108a82db08c9cb7332c3f5b43888848b0ce465f",
+      "bytes": 14682,
       "mode": "100644"
     },
     {
       "source": "agent/src/position_episodes.py",
       "path": "02_신규기능코드/agent/src/position_episodes.py",
-      "sha256": "9b8bef9e90e88ab49f6e63119b61abda22273022546bc81185e7464054af6281",
-      "bytes": 6145,
+      "sha256": "aeb197e1b0e5e3bcd0756413d7fa2d1635c51647c83f3f14799ada7628210bc5",
+      "bytes": 6351,
       "mode": "100644"
     },
     {
       "source": "agent/src/premise_evaluation.py",
       "path": "02_신규기능코드/agent/src/premise_evaluation.py",
-      "sha256": "49627728796b079e90111062d6628dd634a59d137550f7d1e762fe9e37edbc2e",
-      "bytes": 15207,
+      "sha256": "c2f1bce0a269a8ea0c438b32500335faa4b7c159e816c33cec096f57c4a0c1cc",
+      "bytes": 15599,
       "mode": "100644"
     },
     {
@@ -294,8 +483,8 @@
     {
       "source": "agent/src/prompt_validation.py",
       "path": "02_신규기능코드/agent/src/prompt_validation.py",
-      "sha256": "758eef78457b1d0b869bb2baa9b65baa8f2db42bf1612a75443e6bdc462995a5",
-      "bytes": 23952,
+      "sha256": "8838b63795ffa31367bcfdac10ff4ce4db45536a1de0980d53bc823a05bb9ddb",
+      "bytes": 29026,
       "mode": "100644"
     },
     {
@@ -308,8 +497,8 @@
     {
       "source": "agent/src/record_store.py",
       "path": "02_신규기능코드/agent/src/record_store.py",
-      "sha256": "108699a3a7b034c81a1722d3e7d38523b4003275fdc65d2820cbdd1493a9ad4f",
-      "bytes": 15542,
+      "sha256": "bb16d09af1f943fce541983773b1d6b565b36657462eb6b481724e2d50b4e0fd",
+      "bytes": 18731,
       "mode": "100644"
     },
     {
@@ -320,10 +509,38 @@
       "mode": "100644"
     },
     {
+      "source": "agent/src/research_budget.py",
+      "path": "02_신규기능코드/agent/src/research_budget.py",
+      "sha256": "072486e96e998d1e1604abe1b0f4f53dab8aeb001f9670898978b9480010c19c",
+      "bytes": 6942,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/research_budget_checkpoint.py",
+      "path": "02_신규기능코드/agent/src/research_budget_checkpoint.py",
+      "sha256": "868ac9caf075f1ea3090e6cba9b43deb2be6adeb09c8e2f4d4a236adddb1139a",
+      "bytes": 5606,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/research_calls.py",
+      "path": "02_신규기능코드/agent/src/research_calls.py",
+      "sha256": "d0a0fcffdb45c750ffc7aa89356b637a47c1edf71d26adcfb0b52604daed2e4e",
+      "bytes": 2193,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/research_capacity.py",
+      "path": "02_신규기능코드/agent/src/research_capacity.py",
+      "sha256": "bc4102ce09a533e3443798db8c67246abeadc7735e5b5ff705b6f21c7dc5d3e5",
+      "bytes": 4985,
+      "mode": "100644"
+    },
+    {
       "source": "agent/src/research_evidence.py",
       "path": "02_신규기능코드/agent/src/research_evidence.py",
-      "sha256": "8c5e8bfb73ec4640313a84da431600997aa118ba2dc5041334103ec0eac644eb",
-      "bytes": 16306,
+      "sha256": "713b80a85363b9b4069a267bbdd550ed1d3b0a5c59f47f8565a4e26d26dd4e43",
+      "bytes": 17233,
       "mode": "100644"
     },
     {
@@ -334,10 +551,66 @@
       "mode": "100644"
     },
     {
+      "source": "agent/src/research_usage_ledger.py",
+      "path": "02_신규기능코드/agent/src/research_usage_ledger.py",
+      "sha256": "b94c3be659a3ebab6e4670c38da56ee0fbfbf3d425959fbda57841ca12ad6feb",
+      "bytes": 10231,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/retention_gc.py",
+      "path": "02_신규기능코드/agent/src/retention_gc.py",
+      "sha256": "3af0746815bb1e9d103b38b4cdb89837fbbf8b1f6f65304fcf8696ddfa68f1e9",
+      "bytes": 9626,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/retention_inventory.py",
+      "path": "02_신규기능코드/agent/src/retention_inventory.py",
+      "sha256": "dcffd14c3bd917e911fce72642147ff5ec641aeb6b885f92670fbdbd9f2dbb9f",
+      "bytes": 6015,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/retention_policy.py",
+      "path": "02_신규기능코드/agent/src/retention_policy.py",
+      "sha256": "f620bda6b68dd06cc3c54c9473d161be75a9089ea4dfbb27e5dc8d26f361d5fd",
+      "bytes": 2161,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/retention_store.py",
+      "path": "02_신규기능코드/agent/src/retention_store.py",
+      "sha256": "653c11f3fbca01e2510912a50cd62f946cb3e82deae83065269d5f13a1290f59",
+      "bytes": 7879,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/review_comparison.py",
+      "path": "02_신규기능코드/agent/src/review_comparison.py",
+      "sha256": "d70b5957d01bde762b5564c461468ea98ddfcd17df6af5fc82f845c6cea1b139",
+      "bytes": 3192,
+      "mode": "100644"
+    },
+    {
       "source": "agent/src/runtime_inputs.py",
       "path": "02_신규기능코드/agent/src/runtime_inputs.py",
       "sha256": "5f753bdbab24db7fa39d34be812261d7b26fe9b983e151721c62a14915017a4c",
       "bytes": 8831,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/runtime_policy_inputs.py",
+      "path": "02_신규기능코드/agent/src/runtime_policy_inputs.py",
+      "sha256": "41cec884bcdd9620b39d5fde9095d5efdc1dd397b0bab5ce0778c1ec6717b2dc",
+      "bytes": 4382,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/scoped_trace.py",
+      "path": "02_신규기능코드/agent/src/scoped_trace.py",
+      "sha256": "67bc412841bffad043ecf0c40f24b7bbaa410d6c867bc00c80981e4b9b0bb4de",
+      "bytes": 11183,
       "mode": "100644"
     },
     {
@@ -348,10 +621,45 @@
       "mode": "100644"
     },
     {
+      "source": "agent/src/scoring_targets.py",
+      "path": "02_신규기능코드/agent/src/scoring_targets.py",
+      "sha256": "3bab66c660de269df72ef1d84955c8c0223c6a9985eedf21b931de67fd8679a0",
+      "bytes": 16760,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/semantic_dependencies.py",
+      "path": "02_신규기능코드/agent/src/semantic_dependencies.py",
+      "sha256": "c6087e5e74716860a710137c916e8f8f7a590791f44ae3c4166908912d67d957",
+      "bytes": 9559,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/semantic_experiments.py",
+      "path": "02_신규기능코드/agent/src/semantic_experiments.py",
+      "sha256": "df74f57ccee715fa11eaddb6ac0cbd2a5105df7d22eaf874f560a0f6ce447941",
+      "bytes": 17528,
+      "mode": "100644"
+    },
+    {
       "source": "agent/src/semantic_layer.py",
       "path": "02_신규기능코드/agent/src/semantic_layer.py",
-      "sha256": "d4e54593f992c760278e0e156bd8d6c0adaba38eaf561202b8ce96d5ad0f4d32",
-      "bytes": 33340,
+      "sha256": "364198fddbe1c1174954c51ef6634387b651fca7ae0a061136bbcc97562b4212",
+      "bytes": 36556,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/semantic_patch_runtime.py",
+      "path": "02_신규기능코드/agent/src/semantic_patch_runtime.py",
+      "sha256": "741510d2dc4dc647ae4091bdc70c6b6d04a45a1dbf1908cbeaf5cca0e05b3dbc",
+      "bytes": 3543,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/semantic_prompt_validation.py",
+      "path": "02_신규기능코드/agent/src/semantic_prompt_validation.py",
+      "sha256": "6282741c3720849efa3cb754e085f4716a54403b792280ca6f9a9680f8e5a50a",
+      "bytes": 5794,
       "mode": "100644"
     },
     {
@@ -359,6 +667,13 @@
       "path": "02_신규기능코드/agent/src/semantic_runner.py",
       "sha256": "2c73058038c06a201b249566ae99168ae6458c69732354d9cd0740d6bb375130",
       "bytes": 10251,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/semantic_validation.py",
+      "path": "02_신규기능코드/agent/src/semantic_validation.py",
+      "sha256": "8effda6162b860c67cbc316d19eb2d43326414678da7d2c84760e9182b8aab47",
+      "bytes": 6598,
       "mode": "100644"
     },
     {
@@ -378,8 +693,29 @@
     {
       "source": "agent/src/snapshot_store.py",
       "path": "02_신규기능코드/agent/src/snapshot_store.py",
-      "sha256": "33a6e0a8f1eb3736cc3b6b3050e609fcaa71dc6386b681b376e6c448883986f5",
-      "bytes": 11812,
+      "sha256": "2c0a95dbd306eac8bac4db6c6d1c22eff27977ea55b5163859927c71c1e89631",
+      "bytes": 11882,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/source_application.py",
+      "path": "02_신규기능코드/agent/src/source_application.py",
+      "sha256": "6ce1fdd1d4ec39b0aa8556af1f0e8df013b701343ad6ba5d74e13e58bea14445",
+      "bytes": 7301,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/source_change_validation.py",
+      "path": "02_신규기능코드/agent/src/source_change_validation.py",
+      "sha256": "b6fac469bd2699d4d5c65e4bb9d6cd797b5276526adb676838f6d1ac25838853",
+      "bytes": 5738,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/source_validation_runner.py",
+      "path": "02_신규기능코드/agent/src/source_validation_runner.py",
+      "sha256": "0ec457eea258e8e74684140990ce85d5edf7c7415fce5daef971be309a26a5cb",
+      "bytes": 6783,
       "mode": "100644"
     },
     {
@@ -392,15 +728,22 @@
     {
       "source": "agent/src/storage_index.py",
       "path": "02_신규기능코드/agent/src/storage_index.py",
-      "sha256": "281456d38834634bf86dcf0f3721add98ee34a951e01c9044b991bc4007b7110",
-      "bytes": 4542,
+      "sha256": "693745ed9aa58d71c22fe14abc1c946a45aabb741602aaeb2e62ccff63e48744",
+      "bytes": 8547,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/storage_leases.py",
+      "path": "02_신규기능코드/agent/src/storage_leases.py",
+      "sha256": "14398176b558a9428eb37c27cc043894540028a9c41d9d58166357acae608701",
+      "bytes": 2179,
       "mode": "100644"
     },
     {
       "source": "agent/src/storage_objects.py",
       "path": "02_신규기능코드/agent/src/storage_objects.py",
-      "sha256": "e17cedbe1e70e0fd12e8ca6a6b93aba93b30748db9e903f4c79899e25dfbbce4",
-      "bytes": 30619,
+      "sha256": "c2366614cdf15f0e1ecff353d0b6b93620513214fbcfe20cfd08df3d4b19b354",
+      "bytes": 30896,
       "mode": "100644"
     },
     {
@@ -420,36 +763,43 @@
     {
       "source": "agent/src/trace_query.py",
       "path": "02_신규기능코드/agent/src/trace_query.py",
-      "sha256": "5e5301597cc026e2eb68fdffac69993a5a85eae243bb6b80785cf7169f481a38",
-      "bytes": 45332,
+      "sha256": "0746c7566b48944291b2d3400165e7bc2f8499aa773469dc2080abf1a215fd26",
+      "bytes": 45677,
       "mode": "100644"
     },
     {
       "source": "agent/src/trace_snapshot.py",
       "path": "02_신규기능코드/agent/src/trace_snapshot.py",
-      "sha256": "09b09c3768831235a7c9afc0568e8a5e27c9879ddf0424478789856a41d00fa0",
-      "bytes": 11618,
+      "sha256": "ff7436dc24a8281c7975aba0541adcf07b2ca06ec30ca0c4c49ec30caf2ecae1",
+      "bytes": 11838,
       "mode": "100644"
     },
     {
       "source": "agent/src/trace_view.py",
       "path": "02_신규기능코드/agent/src/trace_view.py",
-      "sha256": "dedd422cc69dfd4685faf38104059712bc772526c13410fffd153966bc98dc34",
-      "bytes": 7278,
+      "sha256": "db8962f44e6181e01ebebc0397864435deb657cfe09d5bcb8e002afe6d9af789",
+      "bytes": 8062,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/usage_checkpoint.py",
+      "path": "02_신규기능코드/agent/src/usage_checkpoint.py",
+      "sha256": "45b69cfc33c4d55ae31693f748f4e813e115a86110cc0aab115dae43472b1a85",
+      "bytes": 10692,
       "mode": "100644"
     },
     {
       "source": "agent/src/validation_dataset.py",
       "path": "02_신규기능코드/agent/src/validation_dataset.py",
-      "sha256": "118349eee2defb25f228d990ca7605e39ff7798950256d797aa52a26c53df930",
-      "bytes": 32367,
+      "sha256": "684384d3d592229d121fc398b862643c2ab74e2c45a2fe75371e5fd6fa6ae89a",
+      "bytes": 32622,
       "mode": "100644"
     },
     {
       "source": "agent/src/validation_holdout.py",
       "path": "02_신규기능코드/agent/src/validation_holdout.py",
-      "sha256": "c886549f3fa2e2cb48fe71ca9d57c4f7b5a39d11c98b6e1262eafe4070859466",
-      "bytes": 11760,
+      "sha256": "d96207ebe2ee6c88073de50ccc22bf749c13538cb20622642e2e38f23acf9263",
+      "bytes": 12655,
       "mode": "100644"
     },
     {
@@ -462,15 +812,22 @@
     {
       "source": "agent/src/validation_spec.py",
       "path": "02_신규기능코드/agent/src/validation_spec.py",
-      "sha256": "bac851c7fc63e552acb758e73c9d09361ae84b60082eae077d05f3608a4e1901",
-      "bytes": 11306,
+      "sha256": "751f95933a4e0b665b9d248e5ce363a514cc0d7ea30fe570dfa262c2d6ecc494",
+      "bytes": 11460,
       "mode": "100644"
     },
     {
       "source": "agent/src/validation_store.py",
       "path": "02_신규기능코드/agent/src/validation_store.py",
-      "sha256": "f325b66375c76a661c595c4909ab7f084955f276f790c0f91baa18bbcf1e0bc8",
-      "bytes": 5647,
+      "sha256": "a33924e0d9be3527ac981108017d368bcb8e495d239693411eb9938a5b01803b",
+      "bytes": 6105,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/src/workspace_reclamation.py",
+      "path": "02_신규기능코드/agent/src/workspace_reclamation.py",
+      "sha256": "e3169b7756e4e4aea081878376b71dc7b3102fd95b6930f78d2a892ef375d90b",
+      "bytes": 4788,
       "mode": "100644"
     },
     {
@@ -544,6 +901,20 @@
       "mode": "100644"
     },
     {
+      "source": "agent/tests/test_archive_reclamation.py",
+      "path": "04_검사코드/agent/tests/test_archive_reclamation.py",
+      "sha256": "8bd0a1742874f240dce07c972d226909ee07e73311b80f8f0feabd01569eb426",
+      "bytes": 11159,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_assessment_delivery_queue.py",
+      "path": "04_검사코드/agent/tests/test_assessment_delivery_queue.py",
+      "sha256": "93388d55539bf3aeb59972e7899d4c76b969f6c20187eba2632b97c326affaa5",
+      "bytes": 1648,
+      "mode": "100644"
+    },
+    {
       "source": "agent/tests/test_calendar_extension.py",
       "path": "04_검사코드/agent/tests/test_calendar_extension.py",
       "sha256": "f2fea98d6651b73265b685ab473e7bfcb4c923ac57302c1ba67e2147008ede25",
@@ -553,8 +924,8 @@
     {
       "source": "agent/tests/test_case_dataset.py",
       "path": "04_검사코드/agent/tests/test_case_dataset.py",
-      "sha256": "5c1a7c7a9f9162f28bb218d96dbeef2deaea8746613cea7d5a23cc043ea9ffda",
-      "bytes": 19722,
+      "sha256": "02ba7772c43e6c0908cf2a691da61e78d34dc7330b54f3a6d7844d5082485bfb",
+      "bytes": 19823,
       "mode": "100644"
     },
     {
@@ -567,15 +938,15 @@
     {
       "source": "agent/tests/test_case_review.py",
       "path": "04_검사코드/agent/tests/test_case_review.py",
-      "sha256": "d16bb48efc3940099c0f7069e0e6da950961bbe7ea1e5bdf2d86e20a46b7f29c",
-      "bytes": 14604,
+      "sha256": "3c2da53bfb368a5bd65ff72c09af383d4745df19e652c3599b1c5bb3d0b70b08",
+      "bytes": 14930,
       "mode": "100644"
     },
     {
       "source": "agent/tests/test_case_review_tools.py",
       "path": "04_검사코드/agent/tests/test_case_review_tools.py",
-      "sha256": "2ed0c5de2bfb6e60ebf317ec7de62348c79ad7b4fa7e13c27f91f5ad0626bcf3",
-      "bytes": 16263,
+      "sha256": "d0cb0c3c4823844c3f789cd2b6ec77f58bb21f29323326f1e99131ea6408a946",
+      "bytes": 16306,
       "mode": "100644"
     },
     {
@@ -588,8 +959,8 @@
     {
       "source": "agent/tests/test_close_evaluation.py",
       "path": "04_검사코드/agent/tests/test_close_evaluation.py",
-      "sha256": "1d6f260cc0f2edf590fe7508c7d71dccc8ac7ae2639e04dc1ec000a3f9f8b76c",
-      "bytes": 16195,
+      "sha256": "54e3ea72e87daa97dad76e4220b055fd4a945dcd8e4a482078f220c59d41e59f",
+      "bytes": 16257,
       "mode": "100644"
     },
     {
@@ -670,6 +1041,62 @@
       "mode": "100644"
     },
     {
+      "source": "agent/tests/test_exposure_checkpoint.py",
+      "path": "04_검사코드/agent/tests/test_exposure_checkpoint.py",
+      "sha256": "2c2373dbb5fb8eb151804f1aefacb125f72d7e9a769e0c642b8bd2079c0f3284",
+      "bytes": 2323,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_holdout_scopes.py",
+      "path": "04_검사코드/agent/tests/test_holdout_scopes.py",
+      "sha256": "22f1551ce89a289916d4a54a5582c458d053d498c939889e116a5925eab3913d",
+      "bytes": 2814,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_improvement.py",
+      "path": "04_검사코드/agent/tests/test_improvement.py",
+      "sha256": "758150aa68ee342931b7ff16adb799ec10c100d6ac88ebc1d536532e198aafaa",
+      "bytes": 15771,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_improvement_boundaries.py",
+      "path": "04_검사코드/agent/tests/test_improvement_boundaries.py",
+      "sha256": "bfb3301e0d570dd9d465fdfdc964d8fe6bd2c71ecd6bfa747553a67333a7dbac",
+      "bytes": 8053,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_improvement_finalization.py",
+      "path": "04_검사코드/agent/tests/test_improvement_finalization.py",
+      "sha256": "504ac8cb7520af8013dcb180679c6e02afdd2867d777bdc6d9a4ca132e8f225e",
+      "bytes": 3113,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_improvement_lifecycle.py",
+      "path": "04_검사코드/agent/tests/test_improvement_lifecycle.py",
+      "sha256": "8f53d6635fb91e6dbe51e775bf19c9875f2d863440921814bd431cd0418ee808",
+      "bytes": 9358,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_improvement_migration.py",
+      "path": "04_검사코드/agent/tests/test_improvement_migration.py",
+      "sha256": "ed22326dc5059a12a396bcfe20030918ed7f4435b25f13fd00918383292a2d41",
+      "bytes": 2575,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_journal_retention.py",
+      "path": "04_검사코드/agent/tests/test_journal_retention.py",
+      "sha256": "56d666de4adb2a79ceb7614e46250410efe00bc4fc6056cb6c7e7f4dcc084a7b",
+      "bytes": 15319,
+      "mode": "100644"
+    },
+    {
       "source": "agent/tests/test_judgment_coverage.py",
       "path": "04_검사코드/agent/tests/test_judgment_coverage.py",
       "sha256": "0449f04d566cd4e8695cf5d4516ff6f2b4b05230635f5417d73047c5c92e077b",
@@ -686,8 +1113,8 @@
     {
       "source": "agent/tests/test_learning_proposals.py",
       "path": "04_검사코드/agent/tests/test_learning_proposals.py",
-      "sha256": "7cb136225772dc29940a4316ddf5313b3ae2f2882f2d26efb5059fdb0a955384",
-      "bytes": 27687,
+      "sha256": "fbac4923dd718eb986e6164846fe0f42b542ceea7c09be7e6703870af30e6b7e",
+      "bytes": 27885,
       "mode": "100644"
     },
     {
@@ -705,6 +1132,13 @@
       "mode": "100644"
     },
     {
+      "source": "agent/tests/test_model_retention.py",
+      "path": "04_검사코드/agent/tests/test_model_retention.py",
+      "sha256": "5fbcd0f6933f6a10b397222b677d62800f802bd5ca949e19a55a9311ced4cfa0",
+      "bytes": 15997,
+      "mode": "100644"
+    },
+    {
       "source": "agent/tests/test_ontology.py",
       "path": "04_검사코드/agent/tests/test_ontology.py",
       "sha256": "33e45c935ce70b2d3f6355e24f421013a9ce7d2bc1c68579e24b66830b23b25a",
@@ -712,10 +1146,24 @@
       "mode": "100644"
     },
     {
+      "source": "agent/tests/test_order_lifecycle.py",
+      "path": "04_검사코드/agent/tests/test_order_lifecycle.py",
+      "sha256": "b4db2b480c54c846efe0930f1e126aa3ba825d821e5e1a698100aae6515d3151",
+      "bytes": 6238,
+      "mode": "100644"
+    },
+    {
       "source": "agent/tests/test_policy_adoption.py",
       "path": "04_검사코드/agent/tests/test_policy_adoption.py",
-      "sha256": "50dcade593ff12f9892183080c1cdb96223bb063100dc96b3aff61097d97f6bf",
-      "bytes": 16830,
+      "sha256": "0678107faeb5167298926fe2fc5f918371c657dbdaf8e0935109c592ceb48000",
+      "bytes": 19692,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_policy_proof.py",
+      "path": "04_검사코드/agent/tests/test_policy_proof.py",
+      "sha256": "addd4505ddc43d3599a8a7a45886f86d4e0cd01c8b706c8d415d89212c0417a5",
+      "bytes": 4062,
       "mode": "100644"
     },
     {
@@ -728,8 +1176,8 @@
     {
       "source": "agent/tests/test_policy_runtime_race.py",
       "path": "04_검사코드/agent/tests/test_policy_runtime_race.py",
-      "sha256": "eea5f374ca9b1ec72d09af2dc0d5f65be87f7baa5167da028381846ac725e8e9",
-      "bytes": 6314,
+      "sha256": "a69a69ad0b09d4800caa6d65cca8afcf318587f92622055a23214ccf17e15ee1",
+      "bytes": 6744,
       "mode": "100644"
     },
     {
@@ -756,15 +1204,15 @@
     {
       "source": "agent/tests/test_prompt_validation.py",
       "path": "04_검사코드/agent/tests/test_prompt_validation.py",
-      "sha256": "20f90e0fc2978071dfc02c3aae1aad624c0162c7042d38cec37d3e8765ef0d4d",
-      "bytes": 11233,
+      "sha256": "a4b75f8ce49b096e0341e086ef7f3bf1b76679c42850b9e6c179816eca091d9a",
+      "bytes": 16897,
       "mode": "100644"
     },
     {
       "source": "agent/tests/test_proposal_integration.py",
       "path": "04_검사코드/agent/tests/test_proposal_integration.py",
-      "sha256": "72ca85068fc89e67a5ef4355efe544bf3ca91e687e618190a357aee04853b9d4",
-      "bytes": 12952,
+      "sha256": "0e211fd9b3f27f9cf60196daca44b4f66fe288056edb69e4f34be7bdcd4aa439",
+      "bytes": 13028,
       "mode": "100644"
     },
     {
@@ -777,8 +1225,8 @@
     {
       "source": "agent/tests/test_rehearsal_research.py",
       "path": "04_검사코드/agent/tests/test_rehearsal_research.py",
-      "sha256": "71ec460976ea6bcda60adc7ee777970c94f9fdc3eb7a66f1d8cd5af9a1fcd1ea",
-      "bytes": 1721,
+      "sha256": "3781909c02f5cbbf0781e16766ec252e57a78a3afc8ca38f0257b7e9fa6f5bfa",
+      "bytes": 1797,
       "mode": "100644"
     },
     {
@@ -796,10 +1244,66 @@
       "mode": "100644"
     },
     {
+      "source": "agent/tests/test_research_budget_checkpoint.py",
+      "path": "04_검사코드/agent/tests/test_research_budget_checkpoint.py",
+      "sha256": "4e2ed6d51d8e1ece76c316bd2fdc3f35e9e35c9ad2174ecb0924c047d9773bba",
+      "bytes": 4450,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_research_capacity.py",
+      "path": "04_검사코드/agent/tests/test_research_capacity.py",
+      "sha256": "b658902b03dbc33d009009b3ea90bf5aa57215a90e6872304e754e5b8fcd519d",
+      "bytes": 2883,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_research_dispatch.py",
+      "path": "04_검사코드/agent/tests/test_research_dispatch.py",
+      "sha256": "f466562a9bf8c1833e9bbb32ef1194655dc13a41cb708c2685c03669e8d28943",
+      "bytes": 6804,
+      "mode": "100644"
+    },
+    {
       "source": "agent/tests/test_research_evidence.py",
       "path": "04_검사코드/agent/tests/test_research_evidence.py",
       "sha256": "1858e8e9bd0d725aa1c1f3d2b1c6d2d26f06be1d6183b37502251ee1cd493d1d",
       "bytes": 10201,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_research_usage_ledger.py",
+      "path": "04_검사코드/agent/tests/test_research_usage_ledger.py",
+      "sha256": "45d18a57acbc94e6ea3d214c5b0763a8e46f31718a5a2bb65d4005127ba7e241",
+      "bytes": 3319,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_review_comparison.py",
+      "path": "04_검사코드/agent/tests/test_review_comparison.py",
+      "sha256": "4759c0bb3cd15b548926b818a2416e4fb6bd80ea1dd140775eb700d8fec43f33",
+      "bytes": 2414,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_runtime_policy_inputs.py",
+      "path": "04_검사코드/agent/tests/test_runtime_policy_inputs.py",
+      "sha256": "c17f7e8371266d6eda944645dd0c93a30d8320c49f1176ea09e2aeaefa1b2cfc",
+      "bytes": 3798,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_scoped_trace.py",
+      "path": "04_검사코드/agent/tests/test_scoped_trace.py",
+      "sha256": "5ec82bfa98e88a69eecd51376b09fa052890d1795346d63dd2af69c026f82171",
+      "bytes": 6403,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_scoring_targets.py",
+      "path": "04_검사코드/agent/tests/test_scoring_targets.py",
+      "sha256": "7471de3a7b035b1f640bb20b2cf9028827afb96cc50b24fbf8a8271a9f8e538c",
+      "bytes": 19293,
       "mode": "100644"
     },
     {
@@ -875,8 +1379,8 @@
     {
       "source": "agent/tests/test_trace_integration.py",
       "path": "04_검사코드/agent/tests/test_trace_integration.py",
-      "sha256": "666721b519d121361e7e6b1f172c24a56e1fc04b1a9bd31d11fc1499c5a49267",
-      "bytes": 6449,
+      "sha256": "473d30a84a809de21ffae69fde472277cabfe0e37b8100d67fae6b202e1abb19",
+      "bytes": 7845,
       "mode": "100644"
     },
     {
@@ -896,22 +1400,43 @@
     {
       "source": "agent/tests/test_trace_view.py",
       "path": "04_검사코드/agent/tests/test_trace_view.py",
-      "sha256": "8130e75c4ea07c961d3d3bce261edb752440b3f2d84536a16f9d11b2fa7e1d83",
-      "bytes": 10064,
+      "sha256": "9eb9e252e1fd89fe55fa349e9048d6abd517225fd9c147c609f52ea354fa2490",
+      "bytes": 10170,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_usage_checkpoint.py",
+      "path": "04_검사코드/agent/tests/test_usage_checkpoint.py",
+      "sha256": "cb5cebe765129a028fd19c745a37615791861d960ebf121c1aceb22d5f768a3b",
+      "bytes": 8858,
       "mode": "100644"
     },
     {
       "source": "agent/tests/test_validation_data.py",
       "path": "04_검사코드/agent/tests/test_validation_data.py",
-      "sha256": "c241ee1f55778309950d6f173850c7d12366ac1761bde071f876667f1ba8488c",
-      "bytes": 10711,
+      "sha256": "9652525e1bc6fa6ab1dc01218c30f80852e26b623bc338d38f598fbeeab13c44",
+      "bytes": 11007,
       "mode": "100644"
     },
     {
       "source": "agent/tests/test_validation_holdout.py",
       "path": "04_검사코드/agent/tests/test_validation_holdout.py",
-      "sha256": "9c6096cb60a65a6970b8e441fe9a6ff72066dddc1e18f24732f094bc9582953f",
-      "bytes": 5804,
+      "sha256": "ac06947025b2983ef84a54dd2c79eaf8665a66eb964af03b942959d86a97fa9a",
+      "bytes": 6160,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_validation_retention.py",
+      "path": "04_검사코드/agent/tests/test_validation_retention.py",
+      "sha256": "f8bc409d2ce5983ae32fad7d4642291df8811002db2b8b4bc3cdfdd246095061",
+      "bytes": 3746,
+      "mode": "100644"
+    },
+    {
+      "source": "agent/tests/test_workspace_reclamation.py",
+      "path": "04_검사코드/agent/tests/test_workspace_reclamation.py",
+      "sha256": "7d1d6152037ff01dca564f58d87d32b4cb9f3dd0a2f63a8fb3e8feade756294e",
+      "bytes": 4717,
       "mode": "100644"
     },
     {
@@ -1006,6 +1531,13 @@
       "mode": "100644"
     },
     {
+      "source": "docs/IMPROVEMENT_V4.md",
+      "path": "05_설계검토문서/docs/IMPROVEMENT_V4.md",
+      "sha256": "a6663e74a745019e562ff60335e6fab1424fbba68ffe4a30727acaeead0d7c17",
+      "bytes": 41278,
+      "mode": "100644"
+    },
+    {
       "source": "docs/STORAGE_V2.md",
       "path": "05_설계검토문서/docs/STORAGE_V2.md",
       "sha256": "818c202fa1d36a8486d5f952d594529589a3c5fec82cd97a9b70586289a4b4d3",
@@ -1055,8 +1587,8 @@
       "source": "agent/.claude/hooks/risk_check.py",
       "path": "03_기존엔진_연결변경/agent/.claude/hooks/risk_check.py.patch",
       "baseline_sha256": "8c17ccc99da9e6dce8020372b8e224072e13bda8fc175f57d072142eef512df0",
-      "current_sha256": "0577d5110d112e0cb398691c3c12a749ebe9bdeb72d6d1469a1d6f748ac94388",
-      "patch_sha256": "9674f4c1f91bbb3b4c2df9c49c948c98a17c879a2070b5aac044773dbdbfa433",
+      "current_sha256": "15946b5d877256491eb56b84273ed8a42ae72ded402a2e9db36703c6ae1f5fa5",
+      "patch_sha256": "07d24fef7fd4c29c230319bde4c9005f61a2a77244b4113ffb5a51b6ab335b9c",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1075,8 +1607,8 @@
       "source": "agent/CLAUDE.md",
       "path": "03_기존엔진_연결변경/agent/CLAUDE.md.patch",
       "baseline_sha256": "1ccc5e827dc5ddf6bcf0b6ea44173b6ec1f3e9820c001359248c917b22243ce0",
-      "current_sha256": "22bd96b675fab1b279836600d0de38eecec2d9595374d9867568030b891efdec",
-      "patch_sha256": "8879b699cad6340ecdf0469ae3cefccdcc967c10ed8510211d89c337eb7dc574",
+      "current_sha256": "1aeac003e88d0d0d70f9d7f661386822417c9f4054128d6d04afe5ce6f18a0e7",
+      "patch_sha256": "56c2bf64e4983d8f22d29621c0dd196625a28fa449afc07194debc7d4255840a",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1105,8 +1637,8 @@
       "source": "agent/run.py",
       "path": "03_기존엔진_연결변경/agent/run.py.patch",
       "baseline_sha256": "2bb1b4a1575fb879b626ce653b8d430a7276aa1046423f521e97bbe6ee47ec16",
-      "current_sha256": "33e197d369178e5d75a851a14a57811766d529d278ed22978eec19d880d8fafa",
-      "patch_sha256": "657aa11936a9e5c07af1df30eaba42338f8f4f5ce2caf5e9939360b5b24e715a",
+      "current_sha256": "be219823f1e5109399b6b6fbb2e83ae284847d5b7ea543a35615f147327c798b",
+      "patch_sha256": "008e24ea07daaec5438505c7d7554c9ce70b193cbc656588309e56e7b4dbe2fd",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1135,8 +1667,8 @@
       "source": "agent/src/common.py",
       "path": "03_기존엔진_연결변경/agent/src/common.py.patch",
       "baseline_sha256": "efb78761c9b7585deb20face1ff58316d472eba0adb7b401fd55b2219e00048d",
-      "current_sha256": "40ef4942bf81d77b06ff03da809ec6db590b7b86d28b307648ef97acff0cb5d2",
-      "patch_sha256": "bc94b0a8cdd5dad2e1a36cf2f75580c8cc1f4518be6bab3a95e254f8e23375a1",
+      "current_sha256": "278665da65a7545ba1caa3285e80247167162f5b24438c222add43d778e0272b",
+      "patch_sha256": "5d515c166cc91586158ef4453075ad278fd53803343c7bd45a1eefddd6c991f5",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1165,8 +1697,8 @@
       "source": "agent/src/logger.py",
       "path": "03_기존엔진_연결변경/agent/src/logger.py.patch",
       "baseline_sha256": "69cfe76ac9f00a0d505a787f6797082871577d0e195d340849e40e3d6cc58610",
-      "current_sha256": "f7530378447aef4e876106f8cc5372e7b083ac71a5c62648241db5b119e5ff6e",
-      "patch_sha256": "280774c5ea03959d4a3cafd99267939c687b230bdaeb0f2eaeb83bbb6f901cae",
+      "current_sha256": "34259ee63d829e5ed24b94ca46d7bc5798db90f0615c43f65eb070956a0b9e7b",
+      "patch_sha256": "a6e47870c3aff60d0855d6f2dd7c8539f4875a5e64a7159e29d3514b32261073",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1175,8 +1707,8 @@
       "source": "agent/src/mcp_server.py",
       "path": "03_기존엔진_연결변경/agent/src/mcp_server.py.patch",
       "baseline_sha256": "d32bc881e8fb7a337c566c53cae93352037d85d2d387e55f207ee89768534c57",
-      "current_sha256": "023f6b5cafa691f2b578a8730944010c4b0776f9158872a11f6a384bb118902a",
-      "patch_sha256": "e3074455aa8f10e5ca846a09e234e2b2c99010d4c778cac170e9a292a78ab9ce",
+      "current_sha256": "2694032bbb7e95069ae76a338bb34eba020f73c5f1a2dbfb681747a097b90b25",
+      "patch_sha256": "c2cb4df89cf6830bcab2cade4597e3429db7524588b1381ee442b585091143ce",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1195,8 +1727,8 @@
       "source": "agent/src/risk.py",
       "path": "03_기존엔진_연결변경/agent/src/risk.py.patch",
       "baseline_sha256": "3799dad08383881b123b5f0228961b7c2aebfa7bb5405fb9fa6d7e42af2e6fcf",
-      "current_sha256": "0801a284f497b16758ae00caeb966649d17c1d8b7bc92c96be23dd54d9c8e6bd",
-      "patch_sha256": "30844e56f0949534a663be6ba71db9028e12e2c42f350078cb09dfaeff937d1b",
+      "current_sha256": "8cc3532aadf9b69b1b8eb9c897baf614f4f35db56276e0ef0ffd859f5e206bbf",
+      "patch_sha256": "3d5a6aa8e632f5624476abeb2a7dfe3399bef4aa71c3003ee4d2e13fa235d642",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1215,8 +1747,8 @@
       "source": "agent/src/tuning.py",
       "path": "03_기존엔진_연결변경/agent/src/tuning.py.patch",
       "baseline_sha256": "da6ea23d0b361687c7a2ce7935288e9f2c76765d9afca0cd62153c7ee39b804e",
-      "current_sha256": "3797a306635906888bdf55452ed324c284fab7a7e68e05cdf91589bc3693082d",
-      "patch_sha256": "79758c2e97e2bca1de7625890439ea24332f58091a380549342d8aba5a3065bb",
+      "current_sha256": "5a8b3122436ed84e3a150abbcd3b90dc077232a87774371e33d563e7ab09f9e1",
+      "patch_sha256": "32f7411475d631fb6fd0de477109353e838f55f21ed1355b92e740dd44c93dbe",
       "change": "modified",
       "baseline_mode": "100644",
       "current_mode": "100644"
@@ -1336,6 +1868,11 @@
       "reason": "공개 코드 검토에 중복되는 내부 계획·검토·성능 보고 및 요약 문서. 원본 저장소에서 확인 가능."
     },
     {
+      "source": "docs/개선루프 문제지점.md",
+      "reason": "내부 문제 분석 문서. 현재 운영자 계약은 docs/IMPROVEMENT_V4.md로 전달.",
+      "sha256": "bd5565b79f95da98eead7bc53c1019f99f3f5300a6bde9564498cf49f427fbfe"
+    },
+    {
       "source": "docs/검토_수정계획_1_2와_SiON_문제원인_대조.md",
       "sha256": "12ab365d534543da2b0e89f3430bdf161d0930f80b2bac8177454178546a69ca",
       "reason": "공개 코드 검토에 중복되는 내부 계획·검토·성능 보고 및 요약 문서. 원본 저장소에서 확인 가능."
@@ -1347,7 +1884,7 @@
     },
     {
       "source": "docs/수정계획4.md",
-      "sha256": "48bedb6d86b0cbc2ebb664a88a9431155e016fd67612e1ed147b6277e51e9287",
+      "sha256": "8fac72f429f61895d24d941d45797a95f24d48e377626c46445be60c37788139",
       "reason": "미구현 계획·도메인 협의 초안·내부 구현/검토/사후 보고. 현재 적용 계약은 적용안내와 별도 공개 계약으로 설명."
     },
     {
@@ -1529,6 +2066,801 @@
       "source": "reports/compact-evidence-20261114-final/검증보고서.md",
       "sha256": "d9cf2ff119b4e80a302ac4b2e67aa8e559b93575bed2e8ffaa9acbb9af0f53d8",
       "reason": "생성된 비교·리허설·성능 보고 및 대시보드; 공개 소스와 운영자 적용에는 불필요한 실행 산출물."
+    },
+    {
+      "source": "reports/improvement-v4/admission-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f0392171146ac95433234160bedaa5b50bbecd4e21377cb199ab1eabb77841d5"
+    },
+    {
+      "source": "reports/improvement-v4/archive-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "e0c33833eca0fec2d43c6bb107a35291dca23d662562c5aae7b9d4a5a36dbe3e"
+    },
+    {
+      "source": "reports/improvement-v4/archive_growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "47727e7c8995802bbd70db9c30d5376f8b00fb1e7d4806f40d11ed6869a13b76"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-archive-growth.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "498ce13d9a16e258bdb54ad3f33a9636254068379c4ad90efe280403a02c7b28"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-baseline-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7ffaafb100d2fe972458c2cb81d160f7d95ffe608bfefce6fd7583aee594818d"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-final-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "04bf16ae42ede9b434eef951cead8d79f280743585ae06abca9cfd324e93438b"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "586c5b4e31d9d871d5ed33cf700e54decbff2cf8e5c5ea61a92d033b52ea62d0"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-final-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "24611d8d3916b3cc2b0bef34dc79967a89578c2062660b4d93bdcaeaa982da9f"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "25665c90b1fd34d69008f2e15b23e8c91bdf0bffd5ccb3b6decba819c85db549"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7ffaafb100d2fe972458c2cb81d160f7d95ffe608bfefce6fd7583aee594818d"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a6ad1788c34349fa64494b3b918258e19e5861f19517db6fc42054ad2e809257"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "9a847e7ce91915073de3102807c7c3812d7c53ac179d829370a792b53dc69e2c"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-post-suite-delta.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "71f64d5c746c6d4fa38055252bcb52b7dc8fba35a0a9ed82d0397cf4436f680a"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-pre-generation-fixtures.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c24c836495d88629603d567c01bbc325804fdbe4559e5f3ced145d4fda297389"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-pre-lock-reclamation.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "0c995b476a30db41754d907c0390f41b350ddaee6288940bee26e4a4c52609a1"
+    },
+    {
+      "source": "reports/improvement-v4/continuation-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "e7c55ad5f7bbecbf35612375cb0e5442c4477a92abf3152a56c0abbe7ee00b4b"
+    },
+    {
+      "source": "reports/improvement-v4/current-status.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "116ec3d42321ac314f5d4480468cfdf1c53f1989382594e6b4173096c953d341"
+    },
+    {
+      "source": "reports/improvement-v4/exposure-retention-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "eb5c4658cc0c9531c74427e96520da500bf2d72bccea72bd5ad5b097d0ba9d2a"
+    },
+    {
+      "source": "reports/improvement-v4/final-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "6eea011a0541d43c0dc776e84ffa6ab40ea0735f2e0df67b9bb96eb974abe5c0"
+    },
+    {
+      "source": "reports/improvement-v4/final-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a3b8498f220ec812c0a1777c27c075a17b7eb374f68efa5b2d30174c663b43c9"
+    },
+    {
+      "source": "reports/improvement-v4/final-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "0ab56bbe4aa357dc3f979c522bf7f9bc0d59636eed86ab7c4b41cfbee32eca82"
+    },
+    {
+      "source": "reports/improvement-v4/final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c51e90ee1d7c54fbb2412faa027ddf5fefb5b2881373880b691d6db76d7d1d73"
+    },
+    {
+      "source": "reports/improvement-v4/final-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "10a7b0fd5998babaacf8297cd9e3bdc392da511626d81641baeb2a28c7d09a3b"
+    },
+    {
+      "source": "reports/improvement-v4/final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "215298cefbd34fdcf32d8a770c824ae666e872c96b114ba99589fbbcc816cdb2"
+    },
+    {
+      "source": "reports/improvement-v4/finalize_scoring_validation.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "e54d1817ce6143a95844287206b7d7551b75b531e7089a51922c133b5625f5e6"
+    },
+    {
+      "source": "reports/improvement-v4/followup-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f6d93860c14beaeb60e4d3585129ec2582040b647c7f91050181198de42491e2"
+    },
+    {
+      "source": "reports/improvement-v4/full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "ec6529026fe7a7d550ce7eb652689a5a0ca8df6a84349be4142e3f4ff9428cc1"
+    },
+    {
+      "source": "reports/improvement-v4/full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a66de29bee01e87498921f8af2ce64d584e0c8d67bebebdc1275354a8579e901"
+    },
+    {
+      "source": "reports/improvement-v4/growth-public-reader.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "34d157fe68ac52e53dea14f05de3f1a28448006d67f0479c30ba6791a55ff161"
+    },
+    {
+      "source": "reports/improvement-v4/growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "8062efeaca480b0d25089880cbc90336e80947f6302b9f9301a08cebf4318503"
+    },
+    {
+      "source": "reports/improvement-v4/growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "76bcde00cd6278a0b5cbc0ebca1d37e13a7dbd1cd0958a7bcb74c4b118f11ae1"
+    },
+    {
+      "source": "reports/improvement-v4/journal-baseline-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "de695ebf0fdce63aa8669da44d26d7aa3f722f4d590284194c1cee8e7db620c9"
+    },
+    {
+      "source": "reports/improvement-v4/journal-differential-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "830776e499873ef175d38fbb2362f1cb83992d4be466209835247faf20576dd4"
+    },
+    {
+      "source": "reports/improvement-v4/journal-differential.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "8103836457f89760836f28fa11d9b94f74cbaeeecc6463b48d9328c209519124"
+    },
+    {
+      "source": "reports/improvement-v4/journal-final-os-sandbox-verified.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "1e15102230bb2d6f69029eeaa9a18f6d94a812e9d7eda7366de28b3241400e43"
+    },
+    {
+      "source": "reports/improvement-v4/journal-final-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "79546b6b7d420152a9f2ce4a2b69e82f9e9ec24818039fd06966dba9336e0e9f"
+    },
+    {
+      "source": "reports/improvement-v4/journal-final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "eb0318037ebbf6ca93ab3f9333bc38a931568cfd75fa606701648f9c370d10f9"
+    },
+    {
+      "source": "reports/improvement-v4/journal-final-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "68ace2afeab9256ec1e23024ad1634076233042df9ad18b75d81d823ebc2b0cc"
+    },
+    {
+      "source": "reports/improvement-v4/journal-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "caac783eb124ac2ea0c33d7803de32016c49ca7fcaf28610c5b608323a927b11"
+    },
+    {
+      "source": "reports/improvement-v4/journal-followup-after.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "96d845569fbdb8edfcedf2c7a79b9d52032d3712e1302040c346d8dedba8d34a"
+    },
+    {
+      "source": "reports/improvement-v4/journal-followup-before.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a57d9ec88612061dd89199bed2a054d9d3c8b4160c62cd16bf8d41b2cb40dee3"
+    },
+    {
+      "source": "reports/improvement-v4/journal-full-suite-source-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "541f4074f3a69a8d42a4da5db98f80de0112fc3721edb3781c49c1bd11e1c864"
+    },
+    {
+      "source": "reports/improvement-v4/journal-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "541f4074f3a69a8d42a4da5db98f80de0112fc3721edb3781c49c1bd11e1c864"
+    },
+    {
+      "source": "reports/improvement-v4/journal-full-suite-test-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "74f87ae2f69c13009418e2bcfa21ca3f190a07bc6c01e4aa1584deca794132a6"
+    },
+    {
+      "source": "reports/improvement-v4/journal-full-suite-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "74f87ae2f69c13009418e2bcfa21ca3f190a07bc6c01e4aa1584deca794132a6"
+    },
+    {
+      "source": "reports/improvement-v4/journal-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "10d923f0fc08232b49a9895d8f7d53dc3f30a4bfe04faa14666325440ecdf592"
+    },
+    {
+      "source": "reports/improvement-v4/journal-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "b80ba4dcb480b3cc3fb865127e3ce30f6d01f22446f8e4e7074b811cfb816a41"
+    },
+    {
+      "source": "reports/improvement-v4/journal-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "0a2f17008a38632f6161a7781b4427aab408b9eb9d568d0016f06a376065b3d7"
+    },
+    {
+      "source": "reports/improvement-v4/journal-post-suite-delta.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f1eeb87c30834f3e19301148c15e9284ce3236f2fcb76fa1f71fb746d9ccac88"
+    },
+    {
+      "source": "reports/improvement-v4/journal-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "bbc776c293c8141c7aa2f518de2c8c962344d9eb9047aea1c04643a1e14938bf"
+    },
+    {
+      "source": "reports/improvement-v4/journal_differential_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "95b97fd86dcf36b9a22b0ec61b3e196a4f9814641665b143ff3ef296d87d1e54"
+    },
+    {
+      "source": "reports/improvement-v4/journal_growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "609bdecc5b8fc3b68a6c919f4abfe8026daf2c5535cba5e4f12985b242150bf1"
+    },
+    {
+      "source": "reports/improvement-v4/latest-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "df1af83c5ab0fd14a2e22aea25ee1f7841cd68ce7cb2c4a42b3fbe5110274746"
+    },
+    {
+      "source": "reports/improvement-v4/model-boundary-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "e303a00213e28165e31252083f2acb5281baeba750afd76ad76fa970ad320320"
+    },
+    {
+      "source": "reports/improvement-v4/model-cli-dry.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "daab4a1e65fd6ff9802afdeb7121cdb9fce92fde3faceef5d3e7297841bd58a7"
+    },
+    {
+      "source": "reports/improvement-v4/model-current-boundaries.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "33b72eece240c9daa15b3c9c931ae4b2f2fac076c82522c1c4c94dfed2492852"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-boundaries-complete.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "3101a82011d0b9999e0370f5348804ac97deed595f95b54acea9968c2f1db4ab"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-boundaries.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "530f86298914ea4a7366df7557513bbf48d500de01e9b3ddf64f5d9e6814a7a7"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-git-status.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "e726468f9f8ac5ac8ebbd98e94e0a3fe633d29ed93441adf5f0782da40c680b4"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c13e68fd79aa0147f975651bb0bdcbeb8f4404ff38bb306f150deab7549102ac"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "930ee90336d0f1bae87444bb1b00c2a71115509ccd2ea58830a43a3754132cf2"
+    },
+    {
+      "source": "reports/improvement-v4/model-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a7bcca9a26a612b14c826f70181824bee7aaed1ccfe6777ff5f28d40f028d6d7"
+    },
+    {
+      "source": "reports/improvement-v4/model-first-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "abe7fc4051284bdcfc0729cb45ced97fdfb3c5d2248f691542f1013cf67a163a"
+    },
+    {
+      "source": "reports/improvement-v4/model-full-suite-source-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c13e68fd79aa0147f975651bb0bdcbeb8f4404ff38bb306f150deab7549102ac"
+    },
+    {
+      "source": "reports/improvement-v4/model-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c13e68fd79aa0147f975651bb0bdcbeb8f4404ff38bb306f150deab7549102ac"
+    },
+    {
+      "source": "reports/improvement-v4/model-full-suite-test-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a7bcca9a26a612b14c826f70181824bee7aaed1ccfe6777ff5f28d40f028d6d7"
+    },
+    {
+      "source": "reports/improvement-v4/model-full-suite-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a7bcca9a26a612b14c826f70181824bee7aaed1ccfe6777ff5f28d40f028d6d7"
+    },
+    {
+      "source": "reports/improvement-v4/model-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f2aadb9b5f3f86b89e4c4e309c46b0ebbf9181542714d3918df3df84f3bde430"
+    },
+    {
+      "source": "reports/improvement-v4/model-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f2318d99eb6d1a42f4bb811dda7823440c38a045c9c6c492d1ab8d786857768b"
+    },
+    {
+      "source": "reports/improvement-v4/model-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "439b4db4661c55fb86193dcd59387326ec25bb6aab5f844cba7f4adab7ce1e9f"
+    },
+    {
+      "source": "reports/improvement-v4/model-inline-v1-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "3c6e52f50d5bbbdc573349a3f0f7f59c0242414bd9f709d6a1c3c13182bbe65e"
+    },
+    {
+      "source": "reports/improvement-v4/model-inline-v1-pre-fixture-fix-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "51c9729ec20d75de2e9d78492df47308f8c31820f340e534396c9669be0fb9b2"
+    },
+    {
+      "source": "reports/improvement-v4/model-inline-v1.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7c8a44a7cc96c9758546bdeb09287c9d24ab79a84b4c63a436458ea6ddcdcaad"
+    },
+    {
+      "source": "reports/improvement-v4/model-inventory-audit.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "047925e61b004d35e3565c33e2393b8576f3cb2e2ce09b1eeadb1c15f414e9ef"
+    },
+    {
+      "source": "reports/improvement-v4/model-numeric-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f148ca6373f6fd1ac8adf81617d2d155622821f4971adb4ee9a77a69ae3e48d8"
+    },
+    {
+      "source": "reports/improvement-v4/model-numeric.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "4868753a5cff75f8e322fd25ff55257ad7ae1078396d98054bde9f45aa7bcf2d"
+    },
+    {
+      "source": "reports/improvement-v4/model-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f91b9759451194ec0bc4d9ba5ca0d07513b77faaf0591d6024a0cbd267ffcf93"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-expiry-denominator-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "59129c68bc7dd78459de93ba71ba337b995b33e59db069dc2e6a334bf63c81c1"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-expiry-denominator-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "45aa5bc738cadc11f7a2e24b708f68729a1dbc1df40355bbbfa6cb9d52d46ff1"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-expiry-denominator.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "0c1f88dfc5f5038b06f4870e424a4634af3880d427efb381310c43316e5c978d"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-publication-boundary-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "3bdce151ad41a3c4c1c2c20b9405ac63a35d571a2a45e82dbb2430cb43e99f26"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-publication-boundary-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "ea4f691628998a9f35d66353cd82d731c98b16504fc0787de7f040d01514b138"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-publication-boundary.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c97092e7ac1cfee7afa4e548f6875d29fb0b41080fbf0d33989f999294ecacb5"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-release-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f2318d99eb6d1a42f4bb811dda7823440c38a045c9c6c492d1ab8d786857768b"
+    },
+    {
+      "source": "reports/improvement-v4/model-pre-release-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "584d0423c3ec93c0fee8542d15c8bc52ef2ceedc635a3b967389e484aec94bbf"
+    },
+    {
+      "source": "reports/improvement-v4/model-release-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "515d5db41885d695383e0f1359dd9c6798030bf0de9ef15216f28b1aeeb0d278"
+    },
+    {
+      "source": "reports/improvement-v4/model-release-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "96cb7a6d8cc1ed9e6ea2300524c59a294f3acf52c7d933f6b498e17b9273e515"
+    },
+    {
+      "source": "reports/improvement-v4/model-second-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "85378a4fb612a8e886db829736306f5848e45b6cdbac75fb02ef8c67bd6a6aba"
+    },
+    {
+      "source": "reports/improvement-v4/model_growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "d0311206817ad9a35f0789d31199a75a6a5989fb0c42d050d66b5dd9439475c5"
+    },
+    {
+      "source": "reports/improvement-v4/model_legacy_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "08f4d3683e5bbb324a2bfbce0a3aecbab75341e25a97a1c2e211ebc740e9ac7c"
+    },
+    {
+      "source": "reports/improvement-v4/model_numeric_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "08c87ee0104a3c0196d9d0eef214660bd07a4bfc399c98bd1b4222be2ec66c5e"
+    },
+    {
+      "source": "reports/improvement-v4/os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "6343178644fa46096334bfe851e695a30357d409df73670262eb9d9151c79d85"
+    },
+    {
+      "source": "reports/improvement-v4/policy-proof-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "5ae2f0d0bcf2bc27bc5911645dd1b9b421c710aa2e2ee2c9d11d94ed28133349"
+    },
+    {
+      "source": "reports/improvement-v4/policy-proof-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "4d86e26dcc53266ddb2a66a90a248b72b8e180a9e15d65e64894ccf3b1f9f080"
+    },
+    {
+      "source": "reports/improvement-v4/policy-proof-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "b2a0049082869deb4b6d24226f40404d7e6e66de69f43549dd58ccf18f6808c0"
+    },
+    {
+      "source": "reports/improvement-v4/policy_proof_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f09dd8f70a9c99997860476b0a3446823c8702f75617ecee182f30ef6974c398"
+    },
+    {
+      "source": "reports/improvement-v4/pre-continuation-validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a67c7bc319c2a1ffd07550a9859036420b2ae70c2ad0b1316a53bfc003fbf4d7"
+    },
+    {
+      "source": "reports/improvement-v4/pre-journal-validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f174dad221d54aba67a0e19aafea8da1cf489690b5b32840fc308ceb082d4205"
+    },
+    {
+      "source": "reports/improvement-v4/pre-legacy-final-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "76c3d99ba5244efeea6898e8213b5e63faf50e3ac7e3e052630395ba26d59300"
+    },
+    {
+      "source": "reports/improvement-v4/pre-legacy-final-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f9889ff104e51b74712777efc5dd25dd53308d63f438e9e8eeae22c21594be22"
+    },
+    {
+      "source": "reports/improvement-v4/pre-legacy-final-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7f8f6f4d17964574bc3d4583f3b49996c2728d17251be53435d42bc2f5b0b13e"
+    },
+    {
+      "source": "reports/improvement-v4/pre-legacy-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "23f638cefc123f599afb8571e4e41a01d60844ed2c101c149b3614a612f9407d"
+    },
+    {
+      "source": "reports/improvement-v4/pre-model-validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "412895ecb76a9b4930faa69ddd7e0d3cd7a7ee65ab4fa2fe78291e25fecb796e"
+    },
+    {
+      "source": "reports/improvement-v4/pre-scoring-validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "ca1a6101acc2164cdcd6ba319e55dc89f61c462f4685a9e0e87221d8c9322c1a"
+    },
+    {
+      "source": "reports/improvement-v4/pre-usage-validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "872b93eb997e443043890924f461639e27aa9a810b9f11bdaa0872d61763a072"
+    },
+    {
+      "source": "reports/improvement-v4/raw-baseline-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "8ee120a37a7006a366e072adfa63d0c0006b58e512133b1425b197ca2a9a808d"
+    },
+    {
+      "source": "reports/improvement-v4/remaining-consumer-map.md",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "4ae14df624fd2164d74fe5c28e2508e40d0be29a6b5cfe126dab6e616ff08709"
+    },
+    {
+      "source": "reports/improvement-v4/resume-comparison-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "53757fb235021e152405a8450fe99fbb167d0f62bc4a26c3b59ae66cc02f54f7"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-baseline-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "d2ddcf6de01c8bbcdf03f5d393faa6510af4807555f334a0d6b04fbac6c7420e"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-cli-dry.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7aed668ced3f59e6d4009012c43628d2b18ffb4629a6b6424e55b5d150bd51ac"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-final-git-status.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f102f645e951b5bdc3611a2367047b071a31d18065d01bc9a570afca7fa82b62"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "28d395822f9c7e90a6cea98c4c87d39ec738b8d12de0d13142c607cfbce06f48"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "081ae61c287a58876bf6cef91d5f0220aef823a41450ed257dac58ecdd01cb64"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-first-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "19dbbe479608085e7b69636658e4abf8345327fad33f8c2fe0f26edc90b10891"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-followup-delta.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7e282b39bfd47c85ceec3e9a0e109a75eb7631fa08b11df9324762ef6cb92a87"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-fourth-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "42cef312b65b78a9a9121cc694105c11fb53747e4b3ecdb43e46f97aface026b"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-full-suite-source-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "28d395822f9c7e90a6cea98c4c87d39ec738b8d12de0d13142c607cfbce06f48"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "28d395822f9c7e90a6cea98c4c87d39ec738b8d12de0d13142c607cfbce06f48"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-full-suite-test-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "081ae61c287a58876bf6cef91d5f0220aef823a41450ed257dac58ecdd01cb64"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-full-suite-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "081ae61c287a58876bf6cef91d5f0220aef823a41450ed257dac58ecdd01cb64"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "b1ed33d9d0e09ccee94bc570c44ea017f94980587f77b74cf9728bc953553767"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "16c18f654282674e279aca1ee80242ed22116a9b633e855c7a7581d1ed455a2c"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "eb3f3c40c5f160a199d9fe337d9408827813597f1a1963d2392d39a8750a2e72"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-inventory-audit.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "2c38a9ed716a43434d562501cb5f12815439d1206d935662c3ed09be47e7d815"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "b836ddf253b7c540343db48dcaa471e523c09c6a2bbae523e5def63c01258e4f"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-denominator-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "cd3ed71c0b583b49f32e8994c55f976ed95396d2e531dfc3fd3907029dd5691d"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-full.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7ee2ddaaa5ef56b10eaa3db7f926b504449959fe6ec1818fb0a8d89d26b74932"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "f9bbf61514de600413d0701b30cf4b783777c73199de11a2273d78c5568eda53"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "b0411ca3bfe45999e448a867b251cdfaecd74321561acb08227dca31736d9bb7"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "a68e30beb6dfaaa53b29860cfebd9f9a079dae01e67a70b6d905579f73935986"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "d15cc1ec5e92963dbe788930fbee87b9a0b002f13718b5faed99c800bb0cd38b"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c88d23e9476dee4972a6b7838420f336aad9ef743b8dce7255393bb8d8de8496"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-pre-lifecycle-bounds-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "6ff7c9c44eb665cf285f3aa183ac97336007cb9f59a25894c6c21579e1a5ef31"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-release-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "3b7fd22e270dd56b32dedc2e7ce9e64ec1eb743fd7d72afb7528b87cff5fd873"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-second-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "17927a245d3b03a70c587b513e5f4eb825e409911ca610ec3c846fdb654f3e9a"
+    },
+    {
+      "source": "reports/improvement-v4/scoring-third-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "d5b39abf0e2d41588e22c830887a4b7d45e6eba036791bb86755e1433ce7e12b"
+    },
+    {
+      "source": "reports/improvement-v4/scoring_growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c6f329a3dacc40e40358c5a6899e2c062745e2d4c6b8679a66e7b7fcbf485eac"
+    },
+    {
+      "source": "reports/improvement-v4/usage-baseline-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "1c84c974e58459cc895e4f8895927d56ce7b3aeae46a8b6873dc6197825f0394"
+    },
+    {
+      "source": "reports/improvement-v4/usage-cli-dry.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "6f981ef0b49db37c016dcba0340286a502769aa0568c7d147130a769c48700d9"
+    },
+    {
+      "source": "reports/improvement-v4/usage-final-boundaries.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "4860a4ec71802ba3ad3125aed44346e5aecf664ff75cafe8df809fe11976d1af"
+    },
+    {
+      "source": "reports/improvement-v4/usage-final-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "91cd149016e4719eae16416066331440f341702a3ab9255cabeb1794965192d0"
+    },
+    {
+      "source": "reports/improvement-v4/usage-final-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "836de40120d69d8902b6ac2275cf5780e8f0429619adf7a8cd3305f2e26d506f"
+    },
+    {
+      "source": "reports/improvement-v4/usage-first-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "bf8b7b4dd25aa1297c479ab556db3d98d60f5a2ef1e66dcbf9c547d72b163d88"
+    },
+    {
+      "source": "reports/improvement-v4/usage-full-suite-source-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "72b1e4d653d985764d1b0caf70c0c1cc3f07833d6d2e0d267dd16f89b706bd4b"
+    },
+    {
+      "source": "reports/improvement-v4/usage-full-suite-source-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "72b1e4d653d985764d1b0caf70c0c1cc3f07833d6d2e0d267dd16f89b706bd4b"
+    },
+    {
+      "source": "reports/improvement-v4/usage-full-suite-test-completion-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "836de40120d69d8902b6ac2275cf5780e8f0429619adf7a8cd3305f2e26d506f"
+    },
+    {
+      "source": "reports/improvement-v4/usage-full-suite-test-hashes.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "836de40120d69d8902b6ac2275cf5780e8f0429619adf7a8cd3305f2e26d506f"
+    },
+    {
+      "source": "reports/improvement-v4/usage-full-suite.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "2d33c3d0a1b805016c8d745fa053a7d7f6f0a4de1f79213d77a7f846aa998afb"
+    },
+    {
+      "source": "reports/improvement-v4/usage-growth-log.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "29d0ffcbc7e8aa7cf7167d2a3088a534d48d619782d7d6023b2bc0336593d134"
+    },
+    {
+      "source": "reports/improvement-v4/usage-growth.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c57633adb2801f06894540d4341ea83d4a7524d645fbb916cf6becea47b78923"
+    },
+    {
+      "source": "reports/improvement-v4/usage-inputs-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "59407149a7603d09ef5b266bd3699084285d9068fd9534f6ae5bafe39e150e55"
+    },
+    {
+      "source": "reports/improvement-v4/usage-inventory-audit.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "7f50331c7b1f260484aa0722d68132496377a650daea5a81ca237be79ab71b13"
+    },
+    {
+      "source": "reports/improvement-v4/usage-os-sandbox.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "938583ed2fa5b6d8f16a1b4a41af876596257bb8687c1c8abdf10663f1891ed6"
+    },
+    {
+      "source": "reports/improvement-v4/usage-post-suite-delta.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "17cd4aa270f4091dfad01589e0cbff1316c630591a5a5cd9caa81c3909b7d41a"
+    },
+    {
+      "source": "reports/improvement-v4/usage-pre-reader-followup.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "2c385b1696170f49e59b46543dac8483afe1701de233f83428553acb4d7e73c7"
+    },
+    {
+      "source": "reports/improvement-v4/usage-second-targeted.txt",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "ff1f15fb06931457515ae3f2bdd80c1933ab9eb977c355bb0cc76faaa3e076b7"
+    },
+    {
+      "source": "reports/improvement-v4/usage_growth_probe.py",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c943a20013a7b5518fc740bd54819208b912ca45855b8240b6185ae264a42b22"
+    },
+    {
+      "source": "reports/improvement-v4/validation-summary.json",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "8ba1c71c1e011140c2e73415b659a265cd2386aec54da467ba40f44510eed8c6"
+    },
+    {
+      "source": "reports/improvement-v4/구현검증보고서.md",
+      "reason": "과거 실행 결과·환경·검증 산출물과 이를 생성한 보고용 스크립트. 실행·회귀 검사의 필수 입력이 아님.",
+      "sha256": "c521346b9f23739f8439e7c2dd1e313beff4903080977c443a8efaa0883f6bb7"
     },
     {
       "source": "reports/semantic-layer-20261114/codex-direct/before-fix-rejections.json",

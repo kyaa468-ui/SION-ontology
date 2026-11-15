@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def snapshot(monkeypatch):
-    value = {'status':'complete','view_id':'view-fixed','manifest':{'created_at':'2026-11-07T10:00:00+09:00'},
+    value = {'status':'complete','view_id':'view-ffffffffffffffffffffffffffffffff','manifest':{'created_at':'2026-11-07T10:00:00+09:00'},
              'projection':{'schema_version':'TRACE_VIEW@v1','targets':[],'traces':{},'cases':[],
                            'reviews':[],'proposals':[],'validations':[],'policies':[],
                            'source_manifest':[],'errors':[],'protected_count':0}}
@@ -48,7 +48,7 @@ def server(snapshot, monkeypatch):
         return SimpleNamespace(server_address=address, server_port=8765,
                                RequestHandlerClass=handler)
     monkeypatch.setattr(V, 'ThreadingHTTPServer', transport)
-    return V.create_server('view-fixed', port=8765)
+    return V.create_server('view-ffffffffffffffffffffffffffffffff', port=8765)
 
 
 def request(server, path, method='GET', headers=None):
@@ -118,7 +118,7 @@ def test_no_mutation_endpoints(server, method):
 
 
 def test_corruption_after_start_never_serves_previous_payload(server, monkeypatch):
-    monkeypatch.setattr(V.trace_snapshot,'load_view_snapshot',lambda _: {'status':'recording_error','view_id':'view-fixed'})
+    monkeypatch.setattr(V.trace_snapshot,'load_view_snapshot',lambda _: {'status':'recording_error','view_id':'view-ffffffffffffffffffffffffffffffff'})
     status, _, body = request(server, '/api/view')
     assert status == 409 and 'projection' not in json.loads(body)
 
@@ -126,7 +126,7 @@ def test_corruption_after_start_never_serves_previous_payload(server, monkeypatc
 def test_cannot_start_unavailable_snapshot(monkeypatch):
     monkeypatch.setattr(V.trace_snapshot,'load_view_snapshot',lambda _: {'status':'protected'})
     with pytest.raises(ValueError, match='VIEW_NOT_AVAILABLE'):
-        V.create_server('view-missing',0)
+        V.create_server('view-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',0)
 
 
 def test_javascript_parses_and_brand_matches_existing_dashboard():

@@ -175,6 +175,12 @@ def _refresh_orders(orders, broker):
         summary["ignored_rows"] = ignored
         stored = _record("execution_status", **context, summary=summary)
         recording_error |= stored.get("recording_status") == "recording_error"
+        if not recording_error:
+            try:
+                import order_lifecycle
+                order_lifecycle.record_confirmation(stored)
+            except Exception as exc:
+                _record('execution_lifecycle_error',**context,error=str(exc))
         summary["recording_status"] = "recording_error" if recording_error else "recorded"
         output.append(summary)
     return output

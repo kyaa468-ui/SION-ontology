@@ -1,8 +1,8 @@
 diff --git a/agent/src/logger.py b/agent/src/logger.py
-index 3353fd9..e905457 100644
+index 3353fd9..6fa8a12 100644
 --- a/agent/src/logger.py
 +++ b/agent/src/logger.py
-@@ -8,20 +8,145 @@
+@@ -8,50 +8,196 @@
  """
  import os
  import sys
@@ -109,6 +109,10 @@ index 3353fd9..e905457 100644
 +        if not isinstance(data, dict): return {}
 +        result = _public_fields(data, ('last_run','last_ok','next_run','runs_today','failures_today'))
 +        result['note'] = '실행 상태 요약 · 원문 비공개'
++        scope=data.get('journal_detail_scope') or {}
++        if re.fullmatch(r'\d{4}-\d{2}-\d{2}',str(scope.get('supported_after',''))):
++            result['journal_detail_scope']={'supported_after':scope['supported_after'],'older_detail':'expired'}
++            result['note']+=' · '+scope['supported_after']+' 이전 거래 상세는 보관 종료'
 +        result['sync'] = {'ok': bool(data['sync'].get('ok')), 'error':'동기화 실패 · 상세 비공개' if data['sync'].get('ok') is False else ''} if isinstance(data.get('sync'), dict) else None
 +        return result
 +    schemas = {'equity': ('date','total','kospi','regime','cap'),
@@ -150,17 +154,49 @@ index 3353fd9..e905457 100644
 +    b = C.load_briefing(default={}) or {}
      for r in b.get("candidates", []) + b.get("holdings", []) + (C.read_json(C.ACCOUNT, {}) or {}).get("holdings", []):
          m[r["code"]] = r["name"]
-     for r in C.read_jsonl(C.JOURNAL):
-@@ -34,7 +159,7 @@ def trades(rows):
-     out_ = [{"id": i + 1, "time": r["time"], "code": r["code"], "name": r["name"], "side": r["side"],
+-    for r in C.read_jsonl(C.JOURNAL):
++    rows=C.read_jsonl(C.JOURNAL)
++    m.update((C.journal_checkpoint(rows) or {}).get('current_names',{}))
++    for r in rows:
+         if r.get("name") and r["name"] != r.get("code"):
+             m[r["code"]] = r["name"]
+     return m
+ 
+ 
+ def trades(rows):
+-    out_ = [{"id": i + 1, "time": r["time"], "code": r["code"], "name": r["name"], "side": r["side"],
++    checkpoint=C.journal_checkpoint(rows)
++    if checkpoint:
++        import journal_checkpoint as J
++        if checkpoint.get('reconciliation_fixes_hash')!=J.digest(FIXES):
++            raise ValueError('JOURNAL_RECONCILIATION_DEFINITION_CHANGED')
++    state=(checkpoint or {}).get('all',{})
++    anchors=state.get('reconcile_anchors',[])
++    def project(r,ordinal):
++        return {"id": ordinal, "time": r["time"], "code": r["code"], "name": r["name"], "side": r["side"],
               "qty": r["qty"], "price": r["price"], "amount": r["amount"], "confidence": r["confidence"],
               "regime": r.get("regime"), "bull": r["bull"], "bear": r["bear"], "decision": r["decision"],
 -             "ordered": r.get("ordered") or FIXES.get(f'{r["time"][:16]}|{r["code"]}')}
+-            for i, r in enumerate(x for x in rows if x["kind"] == "fill")]
+-    return reconcile(out_)
 +             "ordered": r.get("ordered") or FIXES.get(f'{r["time"][:16]}|{r["code"]}'), **trace_fields(r)}
-             for i, r in enumerate(x for x in rows if x["kind"] == "fill")]
-     return reconcile(out_)
++    out_=[project(a['row'],a['ordinal']) for a in anchors]
++    out_ += [project(r,state.get('fills',0)+i+1) for i,r in enumerate(x for x in rows if x['kind']=='fill')]
++    opening=dict(state.get('net',{}))
++    for anchor in anchors:
++        r=anchor['row'];opening[r['code']]=opening.get(r['code'],0)-(r['qty'] if r['side']=='매수' else -r['qty'])
++    context={'checkpoint_hash':hashlib.sha256(json.dumps(checkpoint,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest(),
++             'opening_net':opening} if checkpoint else None
++    return reconcile(out_,opening_context=context)[len(anchors):]
  
-@@ -48,6 +173,7 @@ def reconcile(ts):
+ 
+ FIXES = {k: v for k, v in (C.read_json(os.path.join(C.AGENT, "config", "fill_fixes.json"), {}) or {}).items() if not k.startswith("_")}
+ 
+ 
+-def reconcile(ts):
++def reconcile(ts, *, opening_context=None):
+     """체결 기록의 순수량(매수 − 매도)이 실제 잔고와 다르면 그 종목의 마지막 체결 수량을 잔고에 맞춤.
+     주문 직후 확인 때 일부만 체결돼 있던 경우를 바로잡음 (journal 은 그대로 두고 대시보드 값만 고침)."""
      acc = C.read_json(C.ACCOUNT, {}) or {}
      if not acc.get("holdings") and not ts:
          return ts
@@ -168,17 +204,22 @@ index 3353fd9..e905457 100644
      held = {h["code"]: h["qty"] for h in acc.get("holdings", [])}
      for code in {t["code"] for t in ts}:
          mine = [t for t in ts if t["code"] == code]
-@@ -66,11 +192,38 @@ def reconcile(ts):
+-        diff = held.get(code, 0) - sum(t["qty"] if t["side"] == "매수" else -t["qty"] for t in mine)
++        diff = held.get(code, 0) - (opening_context or {}).get('opening_net',{}).get(code,0) - sum(t["qty"] if t["side"] == "매수" else -t["qty"] for t in mine)
+         # 11-05: 덜 체결된 채 기록된 주문(qty < ordered)부터 채움. 예전엔 마지막 체결에 몰아 붙여 HMM 15:21 매도가 76주로 보였음
+         for t in mine:
+             if not diff or not t.get("ordered") or t["qty"] >= t["ordered"]:
+@@ -66,11 +212,39 @@ def reconcile(ts):
          q = last["qty"] + (diff if last["side"] == "매수" else -diff)
          if diff and q > 0:
              last["qty"], last["amount"] = q, q * last["price"]
-+    _record_reconciliations(before, ts, acc)
++    _record_reconciliations(before, ts, acc, opening_context=opening_context)
      for t in ts:
          t.pop("ordered", None)
      return ts
  
  
-+def _record_reconciliations(before, after, account):
++def _record_reconciliations(before, after, account, *, opening_context=None):
 +    """잔고 차이로 고친 숫자는 체결 확인과 구별해 원래 값·입력을 남긴다."""
 +    for original, corrected in zip(before, after):
 +        if (original["qty"], original["amount"]) == (corrected["qty"], corrected["amount"]):
@@ -191,6 +232,7 @@ index 3353fd9..e905457 100644
 +                  "source_account": copy.deepcopy(account), "journal_unchanged": True,
 +                  "run_attempt_id": original.get("run_attempt_id"),
 +                  **{key: value for key, value in trace_fields(original).items() if key != "execution_quality"}}
++        if opening_context:fields['journal_checkpoint']=copy.deepcopy(opening_context)
 +        # 같은 journal·계좌 스냅샷으로 공개 자료를 다시 생성해도 보정 이력을 늘리지 않는다.
 +        key = hashlib.sha256(json.dumps(fields, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
 +        try:
@@ -207,7 +249,7 @@ index 3353fd9..e905457 100644
  def risks(rows, nm):
      seen, res = set(), []
      for r in rows:
-@@ -103,11 +256,22 @@ def holdings():
+@@ -103,11 +277,22 @@ def holdings():
  
  def system():
      by = {}
@@ -231,7 +273,7 @@ index 3353fd9..e905457 100644
      return sorted(by.values(), key=lambda x: x["date"])
  
  
-@@ -152,7 +316,7 @@ def next_run(now=None):
+@@ -152,7 +337,7 @@ def next_run(now=None):
  
  
  def status(note=""):
@@ -240,7 +282,7 @@ index 3353fd9..e905457 100644
      t = C.today().isoformat()
      todays = [r for r in runs if r["time"].startswith(t)]
      last = runs[-1] if runs else None
-@@ -164,7 +328,7 @@ def status(note=""):
+@@ -164,7 +349,7 @@ def status(note=""):
  
  def briefing():
      """08:30 데이터 준비 결과 요약 (시장 지표 + 후보 종목). 판단 전에 '현재 판단' 카드에 보여줌."""
@@ -249,7 +291,7 @@ index 3353fd9..e905457 100644
      if not b:
          return {}
      m = b.get("market", {})
-@@ -184,10 +348,10 @@ def run_items(run, nm):
+@@ -184,10 +369,10 @@ def run_items(run, nm):
      for r in run:
          if r["kind"] == "decision":
              items[r["code"]] = {"code": r["code"], "name": nm.get(r["code"], r.get("name")), "action": r["action"],
@@ -262,7 +304,7 @@ index 3353fd9..e905457 100644
      for r in run:
          if r["kind"] == "block" and r["code"] in items and "blocked" not in items[r["code"]]:
              items[r["code"]]["blocked"] = f'{r["rule"]}: {r["detail"]}'
-@@ -201,7 +365,7 @@ def decision(rows, nm):
+@@ -201,7 +386,7 @@ def decision(rows, nm):
      if not reg:
          return {}
      items = run_items([r for r in rows if r.get("run") == reg["run"]], nm)
@@ -271,7 +313,7 @@ index 3353fd9..e905457 100644
      mk = C.read_json(C.MARKETS, {}) or {}
      for it in items:   # 20일 변동성 (연율화) · 시장. 대시보드가 종목명 옆·아래에 표시
          row = C.briefing_row(it["code"], b) or {}
-@@ -254,7 +418,7 @@ def equity_close():
+@@ -254,7 +439,7 @@ def equity_close():
          return
      path = os.path.join(C.DOCS_DATA, "equity.json")
      rows = [r for r in (C.read_json(path, []) or []) if r["date"] != C.today().isoformat()]
@@ -280,7 +322,7 @@ index 3353fd9..e905457 100644
      m = b.get("market", {})
      reg = C.latest_regime() or {}
      rows.append({"date": C.today().isoformat(), "total": acc["total"],
-@@ -263,7 +427,7 @@ def equity_close():
+@@ -263,7 +448,7 @@ def equity_close():
      out("equity", sorted(rows, key=lambda r: r["date"]))
  
  
@@ -289,10 +331,17 @@ index 3353fd9..e905457 100644
      rows = C.read_jsonl(C.JOURNAL)
      nm = names()
      out("trades", trades(rows))
-@@ -278,6 +442,33 @@ def write_all(note=""):
-     out("status", status(note))
- 
- 
+@@ -275,7 +460,37 @@ def write_all(note=""):
+     out("decision", decision(rows, nm))
+     out("debates", debates(rows, nm))
+     out("briefing", briefing())
+-    out("status", status(note))
++    state=status(note)
++    checkpoint=C.journal_checkpoint(rows)
++    if checkpoint:state['journal_detail_scope']={'supported_after':checkpoint['supported_after'],'older_detail':'expired'}
++    out("status", state)
++
++
 +def write_all(note=""):
 +    with log_store.scope():
 +        _write_all(note)
@@ -318,8 +367,6 @@ index 3353fd9..e905457 100644
 +        for name in ('runtime_summary.json','daily_summary.json'):
 +            objects.publish_json(Path(C.WORK)/name,
 +                {'schema_version':2,'complete':False,'status':'recording_error','error':str(exc)},replace=True)
-+
-+
+ 
+ 
  if __name__ == "__main__":
-     if "--close" in sys.argv:
-         equity_close()

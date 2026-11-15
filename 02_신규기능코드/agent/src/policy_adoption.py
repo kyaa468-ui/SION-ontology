@@ -21,7 +21,8 @@ VERSION = 'MANUAL_POLICY_ADOPTION@v1'
 
 
 def _operator(operator):
-    if os.environ.get('RUN_MODE','') not in ('','operator'):
+    import change_application
+    if os.environ.get('RUN_MODE','') not in ('','operator') and not change_application.AUTHORIZED.get():
         raise ValueError('MANUAL_OPERATOR_ONLY')
     if not isinstance(operator,str) or not operator.strip() or len(operator)>200:
         raise ValueError('OPERATOR_REQUIRED')
@@ -39,6 +40,9 @@ def _read_params():
 
 
 def _replace_params(params):
+    import change_application
+    if not change_application.AUTHORIZED.get():
+        raise ValueError('USE_UNIFIED_CHANGE_APPLICATION')
     import tuning
     target = Path(tuning.PARAMS_PATH)
     fd, temporary = tempfile.mkstemp(prefix='.policy-',suffix='.tmp',dir=target.parent)
@@ -237,6 +241,11 @@ def _recover(identifier, request_hash):
 
 
 def adopt_policy(adoption_id, expected_revision, request_key, *, operator):
+    import change_application
+    return change_application.apply_prepared(adoption_id,expected_revision,request_key,operator=operator)
+
+
+def _adopt_policy_impl(adoption_id, expected_revision, request_key, *, operator):
     identifier = None
     try:
         operator = _operator(operator); _key(request_key)
@@ -314,9 +323,27 @@ def _end_policy(operation, expected_revision, request_key, operator, reason, act
         return {'activation_id':identifier,'status':'recording_error','error':str(exc)}
 
 
-def revoke_policy(expected_revision, request_key, *, operator, reason):
+def _revoke_policy_impl(expected_revision, request_key, *, operator, reason):
     return _end_policy('revoke',expected_revision,request_key,operator,reason)
 
 
-def rollback_policy(activation_id, expected_revision, request_key, *, operator, reason):
+def _rollback_policy_impl(activation_id, expected_revision, request_key, *, operator, reason):
     return _end_policy('rollback',expected_revision,request_key,operator,reason,activation_id)
+
+
+def rollback_policy(activation_id, expected_revision, request_key, *, operator, reason):
+    import improvement_store as I
+    import change_application
+    import policy_registry
+    if policy_registry.revision(_read_params()) != expected_revision:
+        return {'status':'rejected','error':'STALE_REVISION'}
+    with I.transaction(readonly=True) as db:
+        rows=[] if db is None else db.execute("SELECT body,hash FROM records WHERE kind='application' AND json_extract(body,'$.activation.activation_id')=?",(activation_id,)).fetchall()
+    if len(rows)!=1:
+        return {'status':'rejected','error':'UNIFIED_APPLICATION_REQUIRED'}
+    return change_application.rollback(I.decode(rows[0])['id'],operator=operator,reason=reason)
+
+
+def revoke_policy(expected_revision, request_key, *, operator, reason):
+    import change_application
+    return change_application.revoke(expected_revision,request_key,operator=operator,reason=reason)

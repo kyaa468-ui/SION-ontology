@@ -31,11 +31,86 @@ def add(base, relative, manifest_sha, metadata):
     con=sqlite3.connect(db, timeout=30)
     try:
         con.execute('PRAGMA journal_mode=DELETE')
+        if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' LIMIT 1").fetchone():
+            con.execute('PRAGMA auto_vacuum=INCREMENTAL')
         con.execute('CREATE TABLE IF NOT EXISTS records (path TEXT PRIMARY KEY, sha TEXT NOT NULL, metadata TEXT NOT NULL)')
         con.execute('INSERT OR REPLACE INTO records VALUES (?,?,?)',
                     (relative, manifest_sha, json.dumps(metadata, ensure_ascii=False)))
         con.commit()
     finally:con.close()
+
+
+def compact(base,*,pages=128):
+    """Bounded page reclamation; old non-vacuumable indexes need a rebuild."""
+    target=path(base)
+    if not target.exists():return {'state':'absent'}
+    if target.is_symlink():raise ValueError('INDEX_SYMLINK_FORBIDDEN')
+    before=target.stat().st_size
+    db=sqlite3.connect(target,timeout=0)
+    try:
+        if db.execute('PRAGMA auto_vacuum').fetchone()[0]!=2:
+            return {'state':'index_rebuild_required','database_bytes':before}
+        db.execute('PRAGMA incremental_vacuum('+str(min(128,max(1,int(pages))))+')').fetchall()
+        return {'state':'compacted','database_bytes_before':before,'database_bytes_after':target.stat().st_size,
+                'free_pages_remaining':db.execute('PRAGMA freelist_count').fetchone()[0]}
+    except sqlite3.OperationalError as exc:
+        if 'locked' in str(exc):return {'state':'deferred','reason':'index_reader_or_writer_active'}
+        raise
+    finally:db.close()
+
+
+def rebuild(base=None):
+    """Build aside, then atomically replace only this derived index."""
+    import common as C
+    import record_store as R
+    import archive_reclamation as G
+    import storage_objects as O
+    import storage_leases as L
+    import tempfile
+    base=Path(base or C.ontology_root())
+    if base.resolve()!=C.ontology_root().resolve():raise ValueError('UNREGISTERED_INDEX_ROOT')
+    if not base.exists():return {'state':'empty'}
+    pin=L.Pin(base);temporary=None
+    try:
+        generation=R.generation(base)
+        with G.database(base) as control:
+            if control and G._read(control,'pending'):raise ValueError('ARCHIVE_RECOVERY_REQUIRED_BEFORE_INDEX_REBUILD')
+        handle,temporary=tempfile.mkstemp(prefix='.index-',suffix='.sqlite3',dir=base)
+        os.close(handle);count=0
+        db=sqlite3.connect(temporary)
+        try:
+            db.execute('PRAGMA auto_vacuum=INCREMENTAL')
+            db.execute('CREATE TABLE records (path TEXT PRIMARY KEY,sha TEXT NOT NULL,metadata TEXT NOT NULL)')
+            for source in G._files(base):
+                if source.suffix!='.json' or source.parent==G.V1.root(base):continue
+                info=R.manifest(source,base=base)
+                if isinstance(info,dict) and info.get('format')==R.FORMAT:
+                    db.execute('INSERT INTO records VALUES (?,?,?)',(str(source.relative_to(base)),O.file_fingerprint(source)[0],json.dumps(info['projection'],ensure_ascii=False)))
+                    count+=1
+            db.commit()
+        finally:db.close()
+        pin.close()
+        import gc
+        gc.collect()
+        with L.exclusive(base):
+            if R.generation(base)!=generation:raise L.StorageBusy('INDEX_SOURCE_GENERATION_CHANGED')
+            # A collector may have committed expiration and crashed before
+            # advancing the generation. Never replace during that recovery.
+            with G.database(base) as control:
+                if control and G._read(control,'pending'):raise L.StorageBusy('ARCHIVE_RECOVERY_REQUIRED_BEFORE_INDEX_REBUILD')
+            target=path(base)
+            if target.is_symlink():raise ValueError('INDEX_SYMLINK_FORBIDDEN')
+            if any(Path(str(target)+suffix).exists() for suffix in ('-wal','-shm','-journal')):
+                raise L.StorageBusy('INDEX_SQLITE_SIDECAR_ACTIVE')
+            before=target.stat().st_size if target.exists() else 0
+            with open(temporary,'rb') as stream:os.fsync(stream.fileno())
+            os.replace(temporary,target);temporary=None
+            G.V1._sync_directory(base)
+        return {'state':'rebuilt','records':count,'database_bytes_before':before,'database_bytes_after':target.stat().st_size}
+    except L.StorageBusy as exc:return {'state':'deferred','reason':str(exc)}
+    finally:
+        pin.close()
+        if temporary and os.path.exists(temporary):os.unlink(temporary)
 
 
 def entries(base, prefix=''):

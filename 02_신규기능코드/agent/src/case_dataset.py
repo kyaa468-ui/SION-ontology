@@ -347,7 +347,7 @@ def _reference_returns(contexts, execution, judgment_ids, cutoff, market_as_of):
 
 
 @__import__("evaluation_context").scoped
-def build_cases(market_as_of, knowledge_as_of):
+def _build_legacy_cases(market_as_of, knowledge_as_of):
     cutoff = _time(knowledge_as_of)
     if cutoff > C.now() or date.fromisoformat(market_as_of) > cutoff.astimezone(C.KST).date():
         raise ValueError('Future comparison cutoff')
@@ -546,3 +546,10 @@ def compare_cases(cases, calendar=None):
             'same_instrument_overlaps': overlaps,
             'same_date_counts': dict(Counter(c['judgment_date'] for c in cases if c.get('judgment_date'))),
             'interpretation': 'observed_counts_and_associations_not_causal_effects'}
+
+
+def build_cases(market_as_of, knowledge_as_of):
+    import independent_cases
+    if independent_cases.enabled():
+        return independent_cases.build(market_as_of,knowledge_as_of)
+    return _build_legacy_cases(market_as_of,knowledge_as_of)

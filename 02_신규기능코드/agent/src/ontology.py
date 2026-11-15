@@ -642,6 +642,16 @@ def deliver(text, b, quotes, params, risk, context=None):
         if W.enabled():
             return f'브리핑 전달 기록 저장 실패 (인용 불가): {type(exc).__name__}. 다시 조회하세요.'
         return text + f'\n브리핑 전달 ID: {did}\n브리핑 전달 기록 저장 실패 (미보관): {type(exc).__name__}\n'
+    try:
+        import assessment_observations
+        assessment_observations.from_delivery(value)
+    except Exception as exc:
+        # The original receipt has committed. Do not repeat a successful
+        # delivery because an ancillary assessment writer failed.
+        try:
+            import case_store
+            case_store.record_error(did,'assessment_observation',exc)
+        except Exception:pass
     return output
 
 

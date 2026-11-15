@@ -52,7 +52,9 @@ def capture_state(account, *, purpose='order_plan'):
     try:
         positions = C.read_json(C.POSITIONS)
         journal_path = Path(C.JOURNAL)
-        journal = log_store.capture(log_store.view(C.JOURNAL)) if journal_path.is_file() else None
+        view=log_store.view(C.JOURNAL) if journal_path.is_file() else None
+        journal=log_store.capture(view) if view is not None else None
+        import journal_retention
         # A confirmed empty account needs no held-position metadata. Preserve
         # the observed file absence and this derivation instead of inventing it.
         positions_status = 'observed' if isinstance(positions, dict) else 'unrecorded'
@@ -62,6 +64,7 @@ def capture_state(account, *, purpose='order_plan'):
                 'account': objects.freeze(account, kind='account'), 'positions': positions, 'journal': journal,
                 'positions_status': positions_status,
                 'journal_status': 'observed' if isinstance(journal, list) else 'unrecorded'}
+        if view is not None:body['journal_watermark']=journal_retention.watermark(view)
         record = _record('portfolio_state', **body)
         return {**body, 'event_id': record.get('event_id'), 'account_scope': E.account_scope(),
                 'recording_status': record.get('recording_status', 'recording_error')}

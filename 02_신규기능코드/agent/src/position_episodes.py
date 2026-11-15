@@ -26,6 +26,7 @@ def _db():
     db.execute('CREATE TABLE IF NOT EXISTS episodes (id TEXT PRIMARY KEY, scope TEXT, code TEXT, opened TEXT, closed TEXT, origin TEXT, source TEXT)')
     db.execute('CREATE UNIQUE INDEX IF NOT EXISTS active_episode ON episodes(scope,code) WHERE closed IS NULL')
     db.execute('CREATE TABLE IF NOT EXISTS scope_state (scope TEXT PRIMARY KEY, observed_complete INTEGER NOT NULL)')
+    db.execute('CREATE TABLE IF NOT EXISTS scope_checkpoints (scope TEXT PRIMARY KEY, complete_at TEXT NOT NULL)')
     return db
 
 
@@ -92,6 +93,7 @@ def observe(account, source=None):
                     events.append(('position_closed', {'position_episode_id': episode['id'], 'code': code,
                                                        'source': source, 'observed_at': at, 'closure_basis': 'complete_account_snapshot'}))
             db.execute('INSERT OR REPLACE INTO scope_state VALUES (?,1)', (scope,))
+            db.execute('INSERT OR REPLACE INTO scope_checkpoints VALUES (?,?)',(scope,at))
         db.commit()
     except Exception as exc:
         if db is not None:

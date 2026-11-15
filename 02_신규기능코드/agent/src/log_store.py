@@ -69,11 +69,20 @@ class LogView(list):
     """Read-only replayable prefix. This view never retains all decoded rows."""
     def __init__(self, path, fields=None):
         super().__init__(); self.path=Path(path); self.fields=fields
+        import journal_retention
+        self._journal_pin=journal_retention.read_pin(path)
         try:
-            st=self.path.stat(); self.identity=(st.st_dev,st.st_ino); self.size=st.st_size
-        except FileNotFoundError: self.identity=None; self.size=0
-        self.digest=self._prefix_hash() if self.identity else None
-        self.stamp=(st.st_mtime_ns,st.st_ctime_ns) if self.identity else None
+            try:
+                st=self.path.stat(); self.identity=(st.st_dev,st.st_ino); self.size=st.st_size
+            except FileNotFoundError: self.identity=None; self.size=0
+            self.digest=self._prefix_hash() if self.identity else None
+            self.stamp=(st.st_mtime_ns,st.st_ctime_ns) if self.identity else None
+        except BaseException:
+            if self._journal_pin:self._journal_pin.close()
+            raise
+    def __del__(self):
+        pin=getattr(self,'_journal_pin',None)
+        if pin:pin.close()
     def _prefix_hash(self):
         digest=hashlib.sha256()
         with self.path.open('rb') as stream:
@@ -105,7 +114,8 @@ class LogView(list):
             if i==index:return value
         raise IndexError(index)
     def __reversed__(self):
-        # Reverse line streaming keeps only the current line, capped at 1MiB.
+        # One checkpoint may contain up to 2MiB of state plus its envelope.
+        # Keep the reverse stream bounded while accepting that same contract.
         if not self.path.exists():return
         self._verify()
         with self.path.open('rb') as stream:
@@ -115,7 +125,7 @@ class LogView(list):
                 parts=(stream.read(count)+pending).split(b'\n');pending=parts.pop(0)
                 for raw in reversed(parts):
                     if raw.strip():yield next(iter_json(io.BytesIO(raw),fields=self.fields))
-                if len(pending)>1024*1024:raise ValueError('REVERSE_LOG_ROW_BUDGET: use forward iterator')
+                if len(pending)>2*1024*1024+1024:raise ValueError('REVERSE_LOG_ROW_BUDGET: use forward iterator')
             if pending.strip():yield next(iter_json(io.BytesIO(pending),fields=self.fields))
     def __deepcopy__(self,memo):
         # Audit callers must capture before returning; a live view is not immutable.

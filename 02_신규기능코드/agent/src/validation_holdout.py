@@ -29,6 +29,8 @@ def _matches(row, code, origin_at, direction=None):
             and (direction is None or direction in scope['confidence_for']))
 
 def reservations(include_released=False):
+    import holdout_scopes
+    if holdout_scopes.enabled():return holdout_scopes.reservations(include_released)
     read = S.records('holdout_reservations'); releases = S.records('holdout_releases')
     if read['errors'] or releases['errors']: raise ValueError('HOLDOUT_HISTORY_UNREADABLE')
     released = {r['validation_id'] for r in releases['records']}
@@ -136,11 +138,10 @@ def enroll_attempt(manifest, briefing=None, account=None):
 def status(validation_id):
     from validation_spec import load_spec
     manifest = load_spec(validation_id)
-    read = S.records('holdout_enrollments')
-    rows = [r for r in read['records'] if r.get('validation_id') == validation_id]
+    errors=[]
+    rows=list(S.iter_records('holdout_enrollments',filters={'validation_id':validation_id},errors=errors))
     reservation = S.load('holdout_reservations', validation_id)
     release = S.load('holdout_releases', validation_id)
-    errors = list(read['errors'])
     if manifest['spec']['mode'] != 'prospective':
         return {'validation_id': validation_id, 'status': 'retrospective_not_independent',
                 'independent': False, 'recording_status': 'recorded', 'enrollments': []}
@@ -148,13 +149,21 @@ def status(validation_id):
              and r.get('reservation_hash') == S.digest(reservation) and not r.get('target_set_incomplete') for r in rows)
     import judgment_coverage as JC
     import research_evidence as RE
-    apps, app_errors = JC._records('premises')
-    errors.extend(app_errors)
-    scoped = [a.get('application_id') for a in apps if a.get('application_id') and
-              reservation and _matches(reservation, a.get('code'), a.get('created_at'))]
+    import research_usage_ledger as L
+    # The verified migration includes all existing dataset/usage exposure and
+    # every subsequent writer updates it. Only that proof retires the old scan.
+    scoped=[]
+    if not L.enabled():
+        apps, app_errors = JC._records('premises')
+        errors.extend(app_errors)
+        scoped = [a.get('application_id') for a in apps if a.get('application_id') and
+                  reservation and _matches(reservation, a.get('code'), a.get('created_at'))]
     usage = RE.usage_status(scoped) if scoped else {'items':[], 'errors':[]}
     errors.extend(usage.get('errors',[]))
-    exposed = [x['application_id'] for x in usage['items'] if x.get('status')=='used']
+    compact=L.exposed_in_scope(manifest['spec']['scope'],manifest['spec']['period'])
+    errors.extend(compact['errors'])
+    if compact['truncated']:errors.append({'reason':'exposure_scope_limit','known_exposed_count':200})
+    exposed = sorted(set([x['application_id'] for x in usage['items'] if x.get('status')=='used']+compact['application_ids']))
     return {'validation_id': validation_id, 'status': 'released' if release else 'reserved',
             'independent': bool(rows) and valid and not errors and not exposed and not release,
             'exposed_application_ids': exposed,
@@ -181,10 +190,16 @@ def release(validation_id, result_id, request_key):
 
 def assert_discovery_allowed(application_ids):
     """Last boundary guard; known reserved IDs cannot be exposed by direct calls."""
-    if not application_ids or not reservations(): return
-    import judgment_coverage as JC
-    apps, errors = JC._records('premises')
-    if errors: raise ValueError('PREMISE_HISTORY_UNREADABLE_DURING_HOLDOUT')
-    wanted=set(application_ids)
-    if discovery_exclusions([a for a in apps if a.get('application_id') in wanted]):
-        raise ValueError('RESERVED_HOLDOUT_DISCOVERY_FORBIDDEN')
+    active=reservations() if application_ids else []
+    if not active:return
+    import ai_judgment as J
+    import improvement_store as I
+    for identifier in set(application_ids):
+        app=J._load('premises',identifier)
+        if not app:
+            alias=I.get('usage_alias',identifier)
+            if not alias or not alias.get('code') or not alias.get('application_origin_at'):
+                raise ValueError('PREMISE_ORIGIN_UNAVAILABLE_DURING_HOLDOUT')
+            app={'code':alias['code'],'created_at':alias['application_origin_at']}
+        if any(_matches(r,app.get('code'),app.get('created_at')) for r in active):
+            raise ValueError('RESERVED_HOLDOUT_DISCOVERY_FORBIDDEN')

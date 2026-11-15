@@ -94,6 +94,9 @@ def _summary_metrics(value):
 
 
 def _publish_models(review_id, models, cutoff):
+    import model_retention
+    if model_retention.enabled():
+        raise ValueError('MODEL_PRODUCER_NAMESPACE_CLOSED')
     # Publications are usable only after the final commit exists. A crash while
     # writing the individual rows cannot publish half a batch.
     monday = (cutoff + timedelta(days=(7 - cutoff.weekday()) % 7 or 7)).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -117,29 +120,18 @@ def _changes(cases, cutoff, previous):
     """Compare immutable case snapshots, including outcome corrections."""
     if previous is None:
         return {'previous_review_id': None, 'new': [c['application_id'] for c in cases], 'changed': [], 'unchanged': []}
-    old = S.load('datasets', previous['review_id'])
-    by = {c['application_id']: c for c in old['cases']} if old else {}
+    import review_comparison as RC
+    by=RC.load(previous)
     groups = {'new': [], 'changed': [], 'unchanged': []}
-    def signature(case):
-        # Report time itself is not a changed observation. Relevant original
-        # inputs, selected evaluation and recording failures remain compared.
-        keys = ('application_id', 'origin_judgment_id', 'features', 'stratum', 'adoption',
-                'decision_regime_snapshot', 'comparison_context', 'evaluation_id',
-                'verdict', 'period_status', 'data_status', 'recording_status',
-                'outcome_eligible', 'model_eligible', 'feature_reasons', 'evaluation_reasons',
-                'conflicting_evaluation_ids', 'judgment_ids', 'reference_returns')
-        return S.digest({k: case.get(k) for k in keys})
     for case in cases:
         key = case['application_id']
-        category = 'new' if key not in by else 'unchanged' if signature(case) == signature(by[key]) else 'changed'
+        category = 'new' if key not in by else 'unchanged' if RC.signature(case)==by[key] else 'changed'
         groups[category].append(key)
     return {'previous_review_id': previous['review_id'], **groups}
 
 
 def build_review(market_as_of=None, knowledge_as_of=None, *, revision=None, timeout_seconds=SINGLE_WORKER_SECONDS):
     import case_dataset as D
-    import case_statistics as ST
-    import case_prediction as P
     import research_evidence as RE
 
     cutoff = instant(knowledge_as_of) if knowledge_as_of else weekly_cutoff()
@@ -165,7 +157,7 @@ def build_review(market_as_of=None, knowledge_as_of=None, *, revision=None, time
                            key=lambda r: (r['knowledge_as_of'], r['finished_at']), default=None)
             manifest = {'review_id': rid, 'spec_version': SPEC_VERSION,
                         'market_as_of': market.isoformat(), 'knowledge_as_of': cutoff.isoformat(),
-                        'revision': revision, 'supersedes': previous['review_id'] if revision and previous else None,
+                        'completion_contract': 'review_result_commit@v1', 'revision': revision, 'supersedes': previous['review_id'] if revision and previous else None,
                         'started_at': instant().isoformat(),
                         'timeout_seconds': timeout_seconds, 'run_status': 'building'}
             S.archive('jobs', rid, manifest)
@@ -183,29 +175,17 @@ def build_review(market_as_of=None, knowledge_as_of=None, *, revision=None, time
             dataset = {**manifest, **selected, 'calendar': calendar, 'definition_id': definition['definition_id']}
             dataset['input_hash'] = S.digest(selected)
             S.archive('datasets', rid, dataset)
+            import review_comparison
+            review_comparison.publish(rid,dataset)
             comparison = D.compare_cases(cases, calendar=calendar)
             errors = copy.deepcopy(selected.get('errors', [])) + previous_results['errors']
             incomplete = bool(selected.get('target_set_incomplete')) or bool(errors)
             comparison['target_set_incomplete'] = incomplete
             comparison['rate_scope'] = 'observed_recorded_targets_only' if incomplete else 'discovery_eligible_application_population' if selected.get('withheld_count') else 'accepted_application_population'
             comparison['withheld_count'] = selected.get('withheld_count', 0)
-            if incomplete:
-                statistics = {'models': [], 'groups': [], 'status': 'source_incomplete', 'errors': []}
-                retrospective = {'predictions': [], 'folds': [], 'status': 'source_incomplete'}
-                prospective = {'status': 'source_incomplete'}
-            else:
-                statistics = ST.fit_groups(cases, calendar, manifest['knowledge_as_of'], deadline=deadline)
-                retrospective = P.retrospective(cases, calendar, manifest['knowledge_as_of'], deadline=deadline)
-                try:
-                    prospective = P.prospective_performance(cases, calendar, manifest['knowledge_as_of'], deadline=deadline)
-                except TimeoutError as exc:
-                    prospective = {'status': 'timeout', 'errors': [{'error': str(exc)}], 'groups': []}
-                errors.extend(statistics.get('errors', []))
-                errors.extend(retrospective.get('errors', []))
-                errors.extend(prospective.get('errors', []))
-                for name, value in (('statistics', statistics), ('retrospective', retrospective), ('prospective', prospective)):
-                    if value.get('status') in ('timeout', 'incomplete'):
-                        errors.append({'operation': name, 'status': value['status']})
+            statistics = {'models': [], 'groups': [], 'status': 'disabled_by_design'}
+            retrospective = {'status': 'disabled_by_design'}
+            prospective = {'status': 'disabled_by_design'}
             if time.monotonic() > deadline:
                 errors.append({'operation': 'build_review', 'status': 'timeout', 'error': 'Calculation deadline exceeded'})
             models = statistics.get('models', [])
@@ -240,7 +220,9 @@ def build_review(market_as_of=None, knowledge_as_of=None, *, revision=None, time
             RE.record_usage(rid, result['case_ids'], 'step5_discovery_and_prediction_evaluation',
                             source_refs={'result_hash': S.digest(result), 'input_hash': dataset['input_hash']})
             if result['analysis_status'] == 'complete':
-                _publish_models(rid, models, cutoff)
+                S.archive('result_commits', rid, {'review_id':rid, 'result_hash':S.digest(result),
+                          'input_hash':dataset['input_hash'], 'completion_contract':'review_result_commit@v1',
+                          'created_at':instant().isoformat()})
             return get_case_review(rid)
     except S.StoreBusy:
         # Another weekly worker is healthy. Contention must never poison its
@@ -258,6 +240,15 @@ def build_review(market_as_of=None, knowledge_as_of=None, *, revision=None, time
             pass
         return {**get_case_review(rid), 'review_id': rid, 'run_status': 'partial',
                 'recording_status': 'recording_error', 'errors': [error]}
+
+
+def completion_commit(review_id, result):
+    if not result:
+        return False
+    if result.get('completion_contract') == 'review_result_commit@v1':
+        commit = S.load('result_commits',review_id)
+        return bool(commit and commit.get('result_hash')==S.digest(result) and commit.get('input_hash')==result.get('input_hash'))
+    return bool(S.load('publication_commits',review_id))  # Historical reader only.
 
 
 def get_case_review(review_id):
@@ -282,7 +273,7 @@ def get_case_review(review_id):
         # The final (possibly empty) publication commit closes that transaction.
         # A killed worker in between must not look complete or launch review AI.
         awaiting_commit = (job.get('spec_version') == SPEC_VERSION and result.get('analysis_status') == 'complete'
-                           and S.load('publication_commits', review_id) is None)
+                           and not completion_commit(review_id, result))
         if awaiting_commit:
             result.update(stored_analysis_status='complete', analysis_status='unfinished', recording_status='incomplete')
         accepted = [x for x in own if x.get('status') == 'accepted']

@@ -80,7 +80,7 @@ def test_real_tools_to_confirmed_refutation_without_trading_side_effects(monkeyp
     fake, manifest, app, jid, plan = accepted(monkeypatch)
     baseline = JC.get_coverage(manifest['run_attempt_id'])
     protected = {p: p.read_bytes() for p in Path(C.WORK).rglob('*')
-                 if p.is_file() and not p.name.startswith('storage_index.sqlite3') and '/scoring/' not in str(p)}
+                 if p.is_file() and not p.name.startswith(('storage_index.sqlite3','storage_publish.sqlite3')) and '/scoring/' not in str(p) and '/improvement/' not in str(p)}
     provider = price_provider(calendar)
     at(monkeypatch, '2026-11-09T16:00:00+09:00')
     first = E.run_evaluation(calendar=calendar, provider=provider)

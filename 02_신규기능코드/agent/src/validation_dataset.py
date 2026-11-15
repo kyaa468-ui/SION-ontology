@@ -63,7 +63,10 @@ def get_inputs(validation_id, input_id=None):
 
 def ensure_inputs(validation_id):
     """A new capture gets a new ID; read-only get_inputs never repairs history."""
-    manifest=load_spec(validation_id); existing=get_inputs(validation_id)
+    manifest=load_spec(validation_id)
+    import retention_store
+    retention_store.require_validation_support(manifest)
+    existing=get_inputs(validation_id)
     imports=S.records('market_imports')
     if imports['errors']:raise ValueError('MARKET_IMPORT_HISTORY_UNREADABLE')
     ids=sorted(r['market_import_id'] for r in imports['records'] if r.get('validation_id')==validation_id)
@@ -85,6 +88,8 @@ def import_validation_market(validation_id, request_key, rows):
     """
     import math
     manifest=load_spec(validation_id)
+    import retention_store
+    retention_store.require_validation_support(manifest)
     if not isinstance(request_key,str) or not request_key.strip(): raise ValueError('REQUEST_KEY_REQUIRED')
     if not isinstance(rows,list) or not rows: raise ValueError('MARKET_ROWS_REQUIRED')
     normalized=[]; seen=set()
@@ -261,6 +266,8 @@ def build_inputs(validation_id, refresh_key=None):
     import runtime_inputs as RI
     import validation_holdout as H
     manifest=load_spec(validation_id);spec=manifest['spec']
+    import retention_store
+    retention_store.require_validation_support(manifest)
     if refresh_key is not None and (not isinstance(refresh_key,str) or not refresh_key.strip()): raise ValueError('REFRESH_KEY_REQUIRED')
     iid='validation-input-'+S.digest([validation_id,refresh_key])[:40]
     existing=S.load('inputs',iid)

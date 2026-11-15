@@ -40,6 +40,20 @@ def authority(monkeypatch,isolated):
         value['settings_hash']=S.digest({k:value[k] for k in ('params','risk','tuning')})
         return value
     monkeypatch.setattr(S,'_current_base',base)
+    import improvement_store as IS
+    import change_registry as CR
+    config_value={'version':IS.VERSION,'auto_apply':[{'operator':'local-test','targets':['fixture.target'],
+        'classes':['strategy'],'scope':{'fixture':'all'},'max_changes_per_day':100,'cooldown_seconds':0,
+        'max_cumulative_changes':100,'expires_at':(NOW+timedelta(days=30)).isoformat(),'rollback':True,
+        'change_limits':{'max_absolute_step':100,'max_cumulative_step':1000,'minimum':0,'maximum':100,
+                         'max_patch_bytes':100000,'max_cumulative_patch_bytes':1000000,'max_changed_lines':10000}}],
+        'validation_criteria':{'strategy':{'required':'legacy_independent_result'}},
+        'observation_criteria':{'fixture.target':{'end_at':(NOW+timedelta(days=7)).isoformat(),
+            'minimum_uses':2,'max_recurrences':0,'max_side_effects':0,
+            'behavior_checks':[{'id':'fixture','path':['case','coverage_status'],'operator':'equals','expected':'linked','specification_ref':'fixture@v1'}],
+            'recurrence_rules':[],'side_effect_rules':[]}},'notification_channels':[]}
+    monkeypatch.setattr(IS,'config',lambda:clone(config_value))
+    monkeypatch.setattr(CR,'base_revision',lambda:{k:base()[k] for k in ('definition_hash','settings_hash')})
     return params
 
 
@@ -68,6 +82,16 @@ def trial(monkeypatch, *, effect=None, condition=None, invalid_gate=None):
     # Only the selection of an immutable result is stubbed, not its integrity.
     import policy_validation
     monkeypatch.setattr(policy_validation,'get_policy_validation',lambda *_:{**result,'validation_result_hash':V.digest(result)})
+    # The legacy effect/commit fixture now enters the unified application gate
+    # with an explicit test grant, diagnosis-linked change and observation spec.
+    import improvement_store as IS
+    with IS.transaction() as db:
+        IS.put(db,'change','fixture-change',{'state':'validation_pending','owner':'fixture-diagnosis',
+            'diagnosis_id':'fixture-diagnosis','target_id':'fixture.target','change_class':'strategy','adapter':'policy',
+            'scope':{'fixture':'all'},'base_revision':{k:base[k] for k in ('definition_hash','settings_hash')},
+            'patch':{'proposal_id':proposal['proposal_id']},'validation':{'validation_id':'validation-test',
+                'criteria_hash':IS.digest(IS.config()['validation_criteria']['strategy'])},
+            'observation':IS.config()['observation_criteria']['fixture.target']})
     return result
 
 
@@ -153,11 +177,15 @@ def test_numeric_policy_atomic_tune_suspends_and_rollback_cannot_overwrite(monke
     value=P['decision']['buy_min_confidence']-.01
     prepared,result=activate(monkeypatch,effect={'operation':'set_parameter','value':value,'unit':'confidence'})
     assert C.params()['decision']['buy_min_confidence']==value
-    with T._submission_lock(): T.write_params([{'key':'decision.buy_min_confidence','to':value-.01}])
-    assert S.snapshot()['status']=='suspended'
+    with pytest.raises(ValueError,match='DIRECT_TUNING_WRITES_RETIRED'):
+        T.write_params([{'key':'decision.buy_min_confidence','to':value-.01}])
+    # Simulate a separately changed current revision to exercise rollback conflict.
+    changed=C.params();changed['decision']['buy_min_confidence']=value-.01
+    authority.write_text(json.dumps(changed))
+    assert S.snapshot()['status']=='recording_error'
     new_revision=S.revision()
     denied=A.rollback_policy(result['activation_id'],new_revision,'rollback',operator='local-test',reason='test')
-    assert denied['error']=='ROLLBACK_WOULD_OVERWRITE_LATER_CHANGES'
+    assert denied.get('error')=='ROLLBACK_WOULD_OVERWRITE_LATER_CHANGES' or denied.get('state')=='rollback_conflict'
     assert C.params()['decision']['buy_min_confidence']==value-.01
     denied=A.revoke_policy(result['revision'],'stale',operator='local-test',reason='test')
     assert denied['error']=='STALE_REVISION'
@@ -265,6 +293,12 @@ def followup_trial(monkeypatch):
     V.archive('result_commits','result-next',{'result_hash':V.digest(result)})
     import policy_validation
     monkeypatch.setattr(policy_validation,'get_policy_validation',lambda *_:{**result,'validation_result_hash':V.digest(result)})
+    import improvement_store as IS
+    with IS.transaction() as db:
+        original=IS.get('change','fixture-change',conn=db)
+        IS.put(db,'change','fixture-change-next',{**original,'state':'validation_pending',
+            'base_revision':{k:manifest['source_bundle']['base_snapshot'][k] for k in ('definition_hash','settings_hash')},
+            'validation':{**original['validation'],'validation_id':'validation-next'}})
     return manifest
 
 

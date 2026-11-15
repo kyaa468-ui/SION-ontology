@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import storage_leases
 
 VERSION = 'content-addressed-snapshot@v1'
 REF = '$sigma_snapshot_ref'
@@ -116,6 +117,7 @@ def _publish(payload, base=None):
     return identifier
 
 
+@storage_leases.guarded
 def encode(value, *, base=None):
     """Return the physical document after durable publication of its blobs.
 
@@ -170,6 +172,7 @@ def encode(value, *, base=None):
             'logical_bytes': len(original), 'payload': packed}
 
 
+@storage_leases.guarded
 def decode(document, *, base=None, dependencies=None):
     """Hydrate a physical document; return old inline JSON unchanged.
 

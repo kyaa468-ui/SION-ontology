@@ -146,7 +146,7 @@ def start_attempt(run_id, kind, briefing, account):
             [_target(code, "매도", "initial_holding") for code in sorted(held)] +
             [_target(code, "매수", "initial_candidate") for code in snapshot["candidates"] if code not in held])
         manifest = {"schema_version": 1, "run_attempt_id": attempt_id, "run_id": run_id,
-                    "kind": kind, "created_at": _now(), "recorded_at_ns": time.time_ns(), "initial_snapshot": snapshot,
+                    "kind": kind, "account_scope": {"account_id": (account or {}).get("account_id"), "mode": C.mode(), "source": "attempt_snapshot"}, "created_at": _now(), "recorded_at_ns": time.time_ns(), "initial_snapshot": snapshot,
                     "initial_targets": targets,
                     "target_set_incomplete": kind in ("decide", "view") and not (
                         snapshot["candidates_known"] and snapshot["holdings_known"]),
@@ -283,7 +283,18 @@ def finish_attempt(attempt_id, status):
         if status not in ("normal", "error", "timeout"):
             raise ValueError("Expected normal, error, or timeout")
         row = _event(attempt_id, "attempt_finish", status=status)
-        return {"recording_status": "recorded", "event_id": row["event_id"]}
+        try:
+            import opportunity_cases
+            result=opportunity_cases.sync_attempt(attempt_id)
+        except Exception as exc:
+            # An ancillary research failure cannot rewrite already confirmed
+            # judgment/order coverage or cause a caller to repeat an order.
+            result={'state':'recording_error','error':str(exc)}
+            try:
+                import case_store
+                case_store.record_error(attempt_id,'opportunity_capture',exc)
+            except Exception:pass
+        return {"recording_status": "recorded", "event_id": row["event_id"],"improvement_capture":result}
     except Exception as exc:
         return _error(attempt_id, "finish_attempt", exc)
 
@@ -307,6 +318,7 @@ def _summarize(manifest, events, submissions, errors, judgment_loader=None, summ
         add(target["code"], target["confidence_for"], target["reasons"][0])
     results = {}
     calls, rule_calls, finish = [], [], None
+    first_finished_at = None
     for event in sorted(events, key=lambda e: (e.get("recorded_at_ns", 0), e.get("created_at", ""), e.get("event_id", ""))):
         kind = event.get("event_type")
         if kind == "targets":
@@ -341,6 +353,8 @@ def _summarize(manifest, events, submissions, errors, judgment_loader=None, summ
             results.setdefault(event["call_event_id"], []).append(event)
         elif kind == "attempt_finish":
             finish = event
+            stamp=event.get('created_at')
+            if stamp and (first_finished_at is None or stamp<first_finished_at):first_finished_at=stamp
 
     for submission in submissions:
         add(submission.get("code"), submission.get("confidence_for"), "submission_observed")
@@ -397,6 +411,7 @@ def _summarize(manifest, events, submissions, errors, judgment_loader=None, summ
     linked_rate = counts["linked"] / denominator if denominator and not incomplete and not recording_error else None
     result = {"schema_version": 1, "run_attempt_id": attempt_id, "run_id": manifest["run_id"],
             "kind": manifest["kind"], "run_status": finish["status"] if finish else "unfinished",
+            "first_finished_at": first_finished_at,
             "target_set_incomplete": incomplete, "expected_count": denominator,
             "counts": counts, "linked_rate": linked_rate,
             "rate_status": "recording_error" if recording_error else "target_set_incomplete" if incomplete else

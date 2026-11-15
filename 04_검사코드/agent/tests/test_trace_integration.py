@@ -27,6 +27,12 @@ import policy_validation as PV
 
 
 def chain(monkeypatch, calendar):
+    from test_research_capacity import configure
+    configure(monkeypatch)
+    import retention_store as RS
+    import retention_policy as RP
+    from test_improvement import calendar as fixture_calendar
+    monkeypatch.setattr(RS,'current_boundary',lambda *_:RP.boundaries(fixture_calendar()))
     fake, attempt, app, review, rid, context, page = ready(monkeypatch, calendar)
     proposed = retain(context, page)
     proposed.update(kind='conditional_rule_change',
@@ -60,11 +66,27 @@ def forbid_runtime(monkeypatch):
 
 
 def protected_bytes():
-    return {name:data for name,data in bytes_under(Path(C.WORK)).items()
+    values={name:data for name,data in bytes_under(Path(C.WORK)).items()
             if not name.startswith('ontology/storage_index.sqlite3')
+            # Publication now advances a coordination generation. It carries
+            # no original judgment, order, account or research evidence.
+            if not name.startswith('ontology/locks/storage_publish.sqlite3')
             if not name.startswith('ontology/trace_view/')
+            if not name.startswith('ontology/improvement/state.sqlite3')
             and not name.startswith('ontology/case_review/usage_events/')
             and not name.startswith('ontology/case_review/locks/')}
+    # A research view must record exposure before returning its evidence. Check
+    # the shared DB logically: only those two usage record kinds may change.
+    # Application, observation, budget, pins and every other state stay frozen.
+    import improvement_store as IS
+    protected={name:[] for name in ('records','revisions','links','calls','exposure','meta')}
+    with IS.transaction(readonly=True) as db:
+        if db:
+            for table in protected:
+                where=" WHERE kind NOT IN ('research_exposure','usage_alias')" if table in {'records','revisions'} else ''
+                protected[table]=sorted(tuple(row) for row in db.execute('SELECT * FROM '+table+where))
+    values['protected_improvement_state']=json.dumps(protected,ensure_ascii=False).encode()
+    return values
 
 
 def assert_only_new_shared_blobs(before):

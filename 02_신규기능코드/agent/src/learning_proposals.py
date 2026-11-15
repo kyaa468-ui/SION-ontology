@@ -57,7 +57,9 @@ def target_snapshot():
     params, risk, rules = copy.deepcopy(C.params()), C.risk_limits(), tuning.rules()
     # The active revision pointer is metadata, not a numeric engine setting.
     policy_base_ref = params.pop('_ontology_policy', None)
-    definition_hash = S.digest({'sources': sources, 'prompts': prompts, 'registry': registry})
+    configurations = {name:(agent/name).read_text(encoding='utf-8') for name in registry.get('configuration_sources',[])}
+    runners = {name:(agent/name).read_text(encoding='utf-8') for name in registry.get('runner_sources',[])}
+    definition_hash = S.digest({'sources': sources, 'prompts': prompts, 'registry': registry, 'configurations':configurations, 'runners':runners})
     settings_hash = S.digest({'params': params, 'risk': risk, 'tuning': rules})
     targets = copy.deepcopy(registry['targets'])
     bindings=registry.get('parameter_bindings',{})
@@ -125,7 +127,7 @@ def build_context(review_id, revision=None):
             result, dataset = CS.load('results',review_id), CS.load('datasets',review_id)
             if (status.get('analysis_status') != 'complete' or status.get('recording_status') != 'recorded'
                     or status.get('target_set_incomplete') or not result or not dataset
-                    or not CS.load('publication_commits',review_id)):
+                    or not R.completion_commit(review_id, result)):
                 S.archive('context_failures',run_id, {'proposal_run_id':run_id, 'status':'source_not_ready',
                           'created_at':now(), 'source_status':status.get('run_status')})
                 return get_learning_proposals(run_id)

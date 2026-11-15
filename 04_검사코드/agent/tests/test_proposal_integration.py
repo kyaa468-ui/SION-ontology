@@ -111,6 +111,8 @@ def test_proposal_hook_denies_before_order_reservation(monkeypatch,capsys):
 
 @pytest.mark.parametrize('terminal',['normal','error','timeout'])
 def test_proposal_runner_records_omission_and_failure(monkeypatch,calendar,terminal):
+    from test_research_capacity import configure
+    configure(monkeypatch)
     *_,rid,ctx,page=ready(monkeypatch,calendar)
     run=runner(); captured={}
     class Fake:

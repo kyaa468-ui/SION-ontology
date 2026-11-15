@@ -228,19 +228,25 @@ def _report(operation, exc):
 
 def reserve_attempt(scope, plan_id=None, attempt_id=None):
     """Issue a stable ID before dispatch. Existing consumed IDs never reset."""
-    aid = attempt_id or "order-" + uuid.uuid4().hex
+    aid = attempt_id
     db = None
     try:
-        _id(scope, "account scope"); _id(aid, "order attempt")
+        _id(scope, "account scope")
+        if aid is not None:_id(aid, "order attempt")
         if plan_id is not None and not isinstance(plan_id, str):
             raise GuardError("INVALID_PLAN_METADATA", "Plan reference must be a string or null")
         db = _connect(create=True)
         db.execute("BEGIN IMMEDIATE")
+        import order_lifecycle as lifecycle
+        lifecycle.initialize(db)
+        if aid is None:aid=lifecycle.issue(db,scope)
         row = db.execute("SELECT * FROM order_attempts WHERE account_scope=? AND order_attempt_id=?", (scope, aid)).fetchone()
         if row:
             if row["plan_id"] != plan_id:
                 raise GuardError("ORDER_ATTEMPT_CONFLICT", "Attempt was reserved for a different plan")
         else:
+            if attempt_id is not None:
+                raise GuardError('UNKNOWN_OR_EXPIRED_ORDER_ID','Only the host may issue a new order ID; supplied IDs must already exist.')
             context = _context()
             db.execute("INSERT INTO order_attempts(account_scope,order_attempt_id,plan_id,run_id,run_attempt_id,created_at,state) VALUES(?,?,?,?,?,?,?)",
                        (scope, aid, plan_id, context["run_id"], context["run_attempt_id"], _now(), "reserved"))
@@ -271,6 +277,8 @@ def _inspect_or_claim(scope, attempt_id, payload, claim=False):
         row = db.execute("SELECT * FROM order_attempts WHERE account_scope=? AND order_attempt_id=?", (scope, attempt_id)).fetchone()
         if row is None:
             raise GuardError("UNKNOWN_ORDER_ATTEMPT", "Attempt must be reserved before sending")
+        import order_lifecycle
+        order_lifecycle.require_sendable(db,row)
         if row["payload_hash"] is not None and row["payload_hash"] != digest:
             raise GuardError("ORDER_ATTEMPT_CONFLICT", "Same attempt ID cannot change order content")
         if row["payload_hash"] is None:
@@ -309,6 +317,8 @@ def _store_result(scope, attempt_id, result):
                             (_json(result), _now(), scope, attempt_id))
         if cursor.rowcount != 1:
             raise GuardError("DISPATCH_STATE_CONFLICT", "Dispatch claim is missing or already completed")
+        import order_lifecycle
+        order_lifecycle.note_result(db,scope,attempt_id,result)
         db.commit()
     except BaseException:
         if db.in_transaction:

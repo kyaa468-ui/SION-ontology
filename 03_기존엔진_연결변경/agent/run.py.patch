@@ -1,5 +1,5 @@
 diff --git a/agent/run.py b/agent/run.py
-index 4e3a0ca..8a2bb89 100644
+index 4e3a0ca..2312ba2 100644
 --- a/agent/run.py
 +++ b/agent/run.py
 @@ -5,6 +5,13 @@
@@ -56,7 +56,16 @@ index 4e3a0ca..8a2bb89 100644
  
  PROMPTS = {
      "decide": "정기 판단 실행입니다 ({time}). CLAUDE.md 의 'A. 정기 판단' 순서대로 진행하세요.",
-@@ -111,48 +138,401 @@ def summary_line(text):
+@@ -92,7 +119,7 @@ EXPECT = {"decide": {"regime"}, "view": {"regime"}, "exit": {"fill", "decision",
+ 
+ 
+ def did_work(kind, run_id):
+-    return any(r.get("run") == run_id and r["kind"] in EXPECT[kind] for r in C.read_jsonl(C.JOURNAL))
++    return any(r["kind"] in EXPECT[kind] for r in C.journal_run_rows(C.read_jsonl(C.JOURNAL),run_id))
+ 
+ 
+ SUMMARY = re.compile(r"판단 갱신\s*/\s*(상승|횡보|하락)\s*/\s*매수 예정\s*\d+건\s*/\s*매도 예정\s*\d+건\s*/\s*관망\s*\d+건"
+@@ -111,48 +138,412 @@ def summary_line(text):
      return re.sub(r"^[\s>*#\-⚠]+|\*\*", "", first).strip()[:120]
  
  
@@ -122,6 +131,9 @@ index 4e3a0ca..8a2bb89 100644
      try:
 -        p = subprocess.Popen(cmd, cwd=HERE, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
 -                             stderr=subprocess.PIPE, encoding="utf-8", errors="replace")
++        if kind in ('review','tune') or os.environ.get('SION_RESEARCH_PURPOSE'):
++            import research_calls
++            cmd = research_calls.before(call_id, kind, cmd)
 +        p = subprocess.Popen(cmd, cwd=HERE, env=env, stdin=subprocess.DEVNULL, stdout=spool.stdout,
 +                             stderr=spool.stderr, encoding="utf-8", errors="replace", start_new_session=os.name != "nt")
          try:
@@ -143,6 +155,8 @@ index 4e3a0ca..8a2bb89 100644
 +        spool.accept(out, err)
 +        res = spool.result()
 +        raw_result = res
++        if kind in ('review','tune') or os.environ.get('SION_RESEARCH_PURPOSE'):
++            research_calls.after(call_id, res)
          u = res.get("usage") or {}
 -        rec.update(ok=p.returncode == 0 and not res.get("is_error") and did_work(kind, run_id),
 +        rec.update(ok=p.returncode == 0 and not res.get("is_error") and (bool(semantic_role) or did_work(kind, run_id)),
@@ -285,6 +299,8 @@ index 4e3a0ca..8a2bb89 100644
 +                       "stderr": spool.stderr, "encoding": "utf-8", "errors": "replace"}
 +            if os.name != "nt":
 +                options["start_new_session"] = True
++            import research_calls
++            cmd = research_calls.before(aid, review_id, cmd)
 +            process = subprocess.Popen(cmd, **options)
 +            try:
 +                out, err = process.communicate(timeout=25 * 60)
@@ -300,6 +316,7 @@ index 4e3a0ca..8a2bb89 100644
 +                raise
 +            spool.accept(out, err)
 +            result = spool.result()
++            research_calls.after(aid, result)
 +            err = spool.tail()
 +            terminal.update(status="normal" if process.returncode == 0 and not result.get("is_error") else "error",
 +                            result=result, stderr=err[-2000:])
@@ -414,6 +431,8 @@ index 4e3a0ca..8a2bb89 100644
 +                        'stdin': subprocess.DEVNULL, 'stdout': spool.stdout, 'stderr': spool.stderr,
 +                        'encoding': 'utf-8', 'errors': 'replace'}
 +                if os.name != 'nt': opts['start_new_session'] = True
++                import research_calls
++                cmd = research_calls.before(aid, proposal_run_id, cmd)
 +                process = subprocess.Popen(cmd, **opts)
 +                try:
 +                    out, err = process.communicate(timeout=25*60)
@@ -427,6 +446,7 @@ index 4e3a0ca..8a2bb89 100644
 +                    raise
 +                spool.accept(out, err)
 +                result = spool.result()
++                research_calls.after(aid, result)
 +                err = spool.tail()
 +                terminal.update(status='normal' if process.returncode == 0 and not result.get('is_error') else 'error',
 +                                result=result, stderr=err[-2000:])
@@ -473,7 +493,7 @@ index 4e3a0ca..8a2bb89 100644
  def publish(msg):
      """docs/data 를 갱신하고, GIT_PUSH=1 이면 커밋·푸시해서 대시보드에 반영."""
      py("logger.py")
-@@ -168,7 +548,7 @@ def publish(msg):
+@@ -168,7 +559,7 @@ def publish(msg):
  
  
  def briefing_fresh():
@@ -482,7 +502,7 @@ index 4e3a0ca..8a2bb89 100644
      return b.get("created", "").startswith(C.today().isoformat())
  
  
-@@ -178,10 +558,135 @@ def main():
+@@ -178,10 +569,192 @@ def main():
      ap.add_argument("kind")
      ap.add_argument("--codes", default="")
      ap.add_argument("--why", default="")
@@ -513,11 +533,66 @@ index 4e3a0ca..8a2bb89 100644
 +    ap.add_argument("--validation-mode", choices=['replay','portfolio','screen_only'], default='replay')
 +    ap.add_argument("--market-file", help="출처·기준시각·실행 가능 수량이 명시된 로컬 모의 시장 관측")
 +    ap.add_argument("--view-id", help="8번의 고정된 로컬 화면 스냅샷 ID")
++    ap.add_argument("--case-ids", default="", help="근거 화면에 포함할 판단 기회 ID (쉼표 구분)")
++    ap.add_argument("--view-limit", type=int, default=50, help="근거 화면의 최대 판단 기회 수 (1~200)")
 +    ap.add_argument("--port", type=int, default=8765, help="로컬 화면 포트 (127.0.0.1만 사용)")
      a = ap.parse_args()
      kind, dry = a.kind, a.dry
 -
 +    if a.no_ai and a.with_ai: ap.error('--no-ai와 --with-ai는 동시에 사용할 수 없습니다.')
++    if kind in {'improve','improvement-status','migrate-opportunities','migrate-independent-cases','migrate-research-usage','migrate-review-comparison','migrate-holdout-scopes','rebuild-storage-index','retention-report','retention-collect','retention-inventory','migrate-journal','journal-retention-report','migrate-policy-proof','migrate-model-retention','migrate-scoring-targets'}:
++        import improvement_worker
++        if kind=='improvement-status': result=improvement_worker.dashboard()
++        elif kind=='migrate-scoring-targets':
++            import scoring_targets
++            result=scoring_targets.migrate(dry_run=dry)
++        elif kind=='migrate-policy-proof':
++            import policy_proof
++            result=policy_proof.migrate(dry_run=dry)
++        elif kind=='migrate-model-retention':
++            import model_retention
++            result=model_retention.enroll(dry_run=dry)
++        elif kind in {'migrate-journal','journal-retention-report'}:
++            import journal_retention,market_calendar
++            from datetime import timedelta
++            calendar=market_calendar.find_calendar_snapshot((C.today()-timedelta(days=90)).isoformat(),C.today().isoformat(),C.now().isoformat(),allow_partial=True)
++            result=journal_retention.collect(calendar,dry_run=dry or kind=='journal-retention-report')
++        elif kind=='rebuild-storage-index':
++            import storage_index
++            result={'state':'dry_run'} if dry else storage_index.rebuild()
++        elif kind=='migrate-holdout-scopes':
++            import holdout_scopes
++            result={'state':'dry_run'} if dry else holdout_scopes.migrate()
++        elif kind=='migrate-research-usage':
++            import research_usage_ledger
++            result={'state':'dry_run'} if dry else research_usage_ledger.migrate()
++        elif kind=='migrate-review-comparison':
++            if not a.review_id:ap.error('필수 인자: --review-id')
++            import review_comparison
++            result={'state':'dry_run'} if dry else review_comparison.migrate(a.review_id)
++        elif kind=='migrate-opportunities':
++            import opportunity_cases
++            result={'state':'dry_run'} if dry else opportunity_cases.migrate(after=a.revision or '')
++        elif kind=='migrate-independent-cases':
++            import independent_cases
++            result={'state':'dry_run'} if dry else independent_cases.migrate(a.market_as_of or C.today().isoformat(),a.knowledge_as_of or C.now().isoformat())
++        elif kind=='retention-inventory':
++            import retention_inventory
++            result=retention_inventory.audit()
++        elif kind in {'retention-report','retention-collect'}:
++            import retention_gc, market_calendar, order_lifecycle, research_budget_checkpoint, archive_reclamation
++            from datetime import timedelta
++            calendar=market_calendar.find_calendar_snapshot((C.today()-timedelta(days=90)).isoformat(),C.today().isoformat(),C.now().isoformat(),allow_partial=True)
++            result=retention_gc.collect(calendar,dry_run=kind=='retention-report' or dry)
++            result['order_replay']=order_lifecycle.collect(calendar,dry_run=kind=='retention-report' or dry)
++            result['research_budget']=research_budget_checkpoint.collect(calendar,dry_run=kind=='retention-report' or dry)
++            result['archives']=archive_reclamation.collect(calendar,dry_run=kind=='retention-report' or dry)
++            import journal_retention
++            result['journal']=(journal_retention.collect(calendar,dry_run=kind=='retention-report' or dry)
++                if journal_retention.enabled() else {'state':'migration_required','command':'migrate-journal'})
++        else: result={'state':'dry_run'} if dry else improvement_worker.run(no_ai=a.no_ai or not a.with_ai)
++        print(json.dumps(result,ensure_ascii=False,indent=2))
++        return
 +    # 저장된 화면을 여는 명령은 매매 잠금·환경 설정·publish 경로에 들어가지 않는다.
 +    if kind in {'build-trace-view', 'trace-view', 'export-trace-summary'}:
 +        if a.with_ai:
@@ -531,8 +606,9 @@ index 4e3a0ca..8a2bb89 100644
 +                              'writes': False, 'ai_called': False, 'published': False}, ensure_ascii=False))
 +            return
 +        if kind == 'build-trace-view':
-+            import trace_snapshot
-+            result = trace_snapshot.build_view_snapshot(a.as_of, a.knowledge_as_of)
++            import scoped_trace
++            result = scoped_trace.build(a.as_of, a.knowledge_as_of,
++                case_ids=[x.strip() for x in a.case_ids.split(',') if x.strip()],limit=a.view_limit)
 +        elif kind == 'export-trace-summary':
 +            import trace_export
 +            result = trace_export.export_trace_summary(a.view_id)
@@ -567,7 +643,8 @@ index 4e3a0ca..8a2bb89 100644
 +                required('model','repetitions','budget_usd')
 +                import prompt_validation
 +                result=prompt_validation.run_prompt_validation(a.validation_id,with_ai=True,model=a.model,repetitions=a.repetitions,budget_usd=a.budget_usd)
-+                result=policy_validation.finalize_prompt_validation(a.validation_id,result['experiment_id'])
++                if result.get('status')!='waiting':
++                    result=policy_validation.finalize_prompt_validation(a.validation_id,result['experiment_id'])
 +            else: result=policy_validation.run_validation(a.validation_id, mode=a.validation_mode)
 +        else:
 +            import policy_adoption as A
@@ -619,7 +696,7 @@ index 4e3a0ca..8a2bb89 100644
      if kind == "monitor":
          import monitor
          monitor.loop()
-@@ -191,14 +696,23 @@ def main():
+@@ -191,14 +764,27 @@ def main():
              pass
          return
      if kind == "prep":
@@ -645,11 +722,15 @@ index 4e3a0ca..8a2bb89 100644
 +                operation["source_process_ok"] = py("logger.py", "--close")
 +                publish(f"Agent close {C.today().isoformat()}")
 +            finally:
-+                score_close("close", dry, max_symbols=a.max_symbols)
++                close_result = score_close("close", dry, max_symbols=a.max_symbols)
++                if not dry:
++                    import improvement_worker
++                    improvement_result = improvement_worker.run(close_result=close_result)
++                    log('개선 조사: ' + json.dumps(improvement_result,ensure_ascii=False))
          return
      if kind not in PROMPTS:
          sys.exit(f"알 수 없는 실행: {kind}\n{__doc__}")
-@@ -244,7 +758,11 @@ def main():
+@@ -244,7 +830,11 @@ def main():
          prompt = PROMPTS[kind].format(time=C.stamp(), codes=a.codes, why=a.why, next_trade=C.next_trade_time() or "내일",
                                        week=C.competition_week(p=p),
                                        period=("이번 주 월~수 (수요일 중간 회고)" if C.now().weekday() == 2 else f"{start} 이후 이번 주 (금요일 주간 회고)"))   # 11-06 S.Lee: 수·금 두 번

@@ -82,7 +82,15 @@ def archive(kind, identifier, body):
     target = _path(kind, identifier)
     envelope = {'format':'immutable-policy-validation-record@v1', 'content_sha256':digest(body), 'record':body}
     try:
+        if kind in {'holdout_reservations','holdout_releases'}:
+            import holdout_scopes
+            holdout_scopes.prepare(kind,identifier,body)
         records_v2.publish(target, envelope, kind=kind, exclusive=False)
+        if kind in {'holdout_reservations','holdout_releases'}:
+            holdout_scopes.commit(kind,identifier,body)
+        if kind=='result_commits' and body.get('validation_id'):
+            import retention_store
+            retention_store.validation_completed(body['validation_id'],identifier)
         return records_v2.load(target)['record']
     except ValueError as exc:
         raise StoreError(str(exc)) from exc

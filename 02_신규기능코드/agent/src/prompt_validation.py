@@ -143,10 +143,28 @@ class FrozenTools:
 
 
 def _cli_stage(request, frozen):
+    version=request.get('model_version')
+    if not isinstance(version,str) or not version.strip():raise ValueError('EXPLICIT_MODEL_VERSION_REQUIRED')
     folder = S.root()/'ai_runtime'/request['trial_id']
-    folder.mkdir(parents=True, exist_ok=False)
     manifest = folder/'input.json'
-    record_store.publish(manifest,request,kind='frozen_trial_input')
+    if manifest.exists() and S.digest(record_store.load(manifest))!=S.digest(request):
+        raise ValueError('PROMPT_STAGE_REQUEST_CHANGED')
+    # A confirmed output is replayed locally, never sent to the provider again.
+    # A durable dispatch without output is ambiguous and must not be retried.
+    for name in ('provider-output.json','partial-output.json'):
+        path=folder/name
+        if path.exists():
+            if not manifest.exists():raise ValueError('PROMPT_STAGE_INPUT_UNAVAILABLE')
+            _restore_calls(folder,frozen)
+            result=record_store.load(path)
+            if name=='partial-output.json':raise TimeoutError('AI trial timed out; dispatch is not retried')
+            return result
+    if S.load('prompt_dispatches',request['trial_id']):
+        raise ValueError('PROMPT_DISPATCH_OUTCOME_UNCONFIRMED')
+    import research_capacity
+    research_capacity.reserve('call:'+request['trial_id'],request.get('experiment_id',request['trial_id']))
+    folder.mkdir(parents=True, exist_ok=True)
+    record_store.publish(manifest,request,kind='frozen_trial_input',exclusive=False)
     config = folder/'mcp.json'
     config.write_text(S.canonical({'mcpServers': {'frozen': {'command': sys.executable,
         'args': [str(Path(__file__).with_name('validation_mcp.py')), str(manifest)],
@@ -157,15 +175,19 @@ def _cli_stage(request, frozen):
     settings.write_text(S.canonical({'permissions':{'allow':[],'deny':['Read','Bash','Write','Edit','WebSearch','WebFetch','Agent','Task']},
         'claudeMdExcludes':['**/CLAUDE.md','**/CLAUDE.local.md','**/AGENTS.md','**/.claude/rules/**'],
         'autoMemoryEnabled':False}),encoding='utf-8')
-    cmd = [shutil.which('claude') or 'claude', '-p', request['prompt'], '--model', request['model'],
+    cmd = [shutil.which('claude') or 'claude', '-p', request['prompt'], '--model', version,
            '--output-format', 'json', '--tools', '', '--settings', str(settings), '--setting-sources', '',
            '--disable-slash-commands', '--no-session-persistence', '--no-chrome',
            '--mcp-config', str(config), '--strict-mcp-config', '--allowedTools',
            *['mcp__frozen__'+t for t in TOOLS], '--disallowedTools', 'Read', 'Bash', 'Write', 'Edit', 'WebSearch', 'WebFetch', 'Agent', 'Task',
            '--max-budget-usd', str(request['budget_usd'])]
     env = {**os.environ, 'RUN_MODE': 'prompt_validation', 'RUN_ATTEMPT_ID': '', 'RUN_ID': request['trial_id']}
+    import research_calls
+    cmd = research_calls.before(request['trial_id'], request.get('experiment_id',request['trial_id']), cmd, paired=True)
+    S.archive('prompt_dispatches',request['trial_id'],{'trial_id':request['trial_id'],
+        'request_hash':S.digest(request),'state':'sent','created_at':C.now().isoformat()})
     temporary=tempfile.TemporaryDirectory(prefix='sigma-frozen-ai-')
-    spool=Spool(request['trial_id']);timed_out=False;parsed=None;returncode=None
+    spool=Spool(request['trial_id']);timed_out=False;parsed=None;returncode=None;settled=None
     try:
         process = subprocess.Popen(cmd, cwd=temporary.name, env=env, stdin=subprocess.DEVNULL, stdout=spool.stdout,
                                    stderr=spool.stderr, start_new_session=os.name!='nt')
@@ -176,23 +198,35 @@ def _cli_stage(request, frozen):
             else: os.killpg(process.pid, signal.SIGKILL)
             out, err = process.communicate();timed_out=True
         spool.accept(out,err);returncode=process.returncode
-        try:parsed=spool.result()
+        try:
+            parsed=spool.result()
+            settled=research_calls.after(request['trial_id'], parsed)
         except (ValueError,TypeError):parsed=None
     finally:
         raw=spool.capture();temporary.cleanup()
-        path = folder/'calls.jsonl'
-        if path.exists():
-            frozen.calls=log_store.capture(log_store.view(path))
-            rows=(row for c in frozen.calls if c['tool']=='record_ai_judgments' and isinstance(c['result'],list) for row in c['result'])
-            frozen.submissions=list({S.digest(row):row for row in rows}.values())
+        _restore_calls(folder,frozen)
+    reported=sorted((parsed.get('modelUsage') or {}).keys()) if isinstance(parsed,dict) else []
+    verified=reported==[version]
+    status=('invalid_output' if not isinstance(parsed,dict) else
+            'model_version_unverified' if not verified else
+            'cost_unresolved' if not settled or settled.get('state')!='settled' else 'parsed')
     result={'returncode':returncode,'raw_output':raw,
             'stdout':raw_text(raw['stdout']) if raw['stdout']['bytes']<=256*1024 else {'detail_ref':'raw_output.stdout'},
             'stderr':raw_text(raw['stderr']) if raw['stderr']['bytes']<=256*1024 else {'detail_ref':'raw_output.stderr'},
-            'provider_result':parsed,'provider_result_status':'parsed' if isinstance(parsed,dict) else 'invalid_output',
+            'provider_result':parsed,'provider_result_status':status,'reported_models':reported,
+            'expected_model_version':version,'model_version_verified':verified,
             'capture_scope':'stdout_and_frozen_tool_io; no hidden reasoning or unavailable subagent output inferred'}
     record_store.publish(folder/('partial-output.json' if timed_out else 'provider-output.json'),result,kind='frozen_trial_output')
     if timed_out:raise TimeoutError('AI trial timed out; retry is a separate experiment attempt')
     return storage_objects.freeze(result,kind='frozen_trial_output')
+
+
+def _restore_calls(folder,frozen):
+    path=folder/'calls.jsonl'
+    if path.exists():
+        frozen.calls=log_store.capture(log_store.view(path))
+        rows=(row for c in frozen.calls if c['tool']=='record_ai_judgments' and isinstance(c['result'],list) for row in c['result'])
+        frozen.submissions=list({S.digest(row):row for row in rows}.values())
 
 
 def _cli_provider(request, frozen):
@@ -267,7 +301,13 @@ def simulate_trials(inputs,spec,trials,repetitions):
     return outputs
 
 
-def run_prompt_validation(validation_id, *, with_ai=False, model=None, repetitions=None, budget_usd=None, provider=None):
+def run_prompt_validation(validation_id, **kwargs):
+    # One owner holds the whole experiment lease, including its stage outputs.
+    with S.locked('prompt-budget-'+validation_id):
+        return _run_prompt_validation(validation_id,**kwargs)
+
+
+def _run_prompt_validation(validation_id, *, with_ai=False, model=None, repetitions=None, budget_usd=None, provider=None):
     import validation_spec as V
     import validation_dataset as D
     import condition_contract as CC
@@ -280,35 +320,57 @@ def run_prompt_validation(validation_id, *, with_ai=False, model=None, repetitio
     if declared.get('model') != model or spec.get('repetitions') != repetitions or declared.get('budget_usd') != budget_usd:
         raise ValueError('EXPERIMENT_SETTINGS_DIFFER_FROM_REGISTRATION')
     if provider is None and not with_ai: raise ValueError('REAL_AI_REQUIRES_EXPLICIT_WITH_AI')
+    version=declared.get('model_version')
+    if provider is None and (not isinstance(version,str) or not version.strip()):
+        raise ValueError('EXPLICIT_MODEL_VERSION_REQUIRED')
     if (proposal.get('effect') or {}).get('operation') != 'prompt_guidance': raise ValueError('PROMPT_GUIDANCE_PROPOSAL_REQUIRED')
     condition = proposal.get('scope_condition') or proposal.get('condition')
     if condition: CC.validate(condition, stage='before_judgment')
     inputs = D.ensure_inputs(validation_id)
     opportunities = inputs.get('opportunities', [])
-    experiment_id = 'prompt-'+uuid.uuid4().hex
+    staged=[]
+    for value in inputs.get('runtime_inputs',{}).values():
+        if isinstance(value,dict) and 'snapshot' in value:value=value['snapshot']
+        if (value.get('options') or {}).get('semantic_stages'):staged.append(value)
+    if staged:
+        import semantic_prompt_validation as SP
+        return SP.run(manifest,inputs,with_ai=with_ai,model=model,repetitions=repetitions,budget_usd=budget_usd,provider=provider)
+    mode='local_fake' if provider else 'explicit_real_ai'
+    identity={'validation_id':validation_id,'input_hash':S.digest(inputs),'spec_hash':S.digest(manifest),
+              'proposal_hash':S.digest(proposal),'mode':mode}
+    experiment_id = 'prompt-'+S.digest(identity)[:40]
     receipts = inputs.get('deliveries', [])
     if isinstance(receipts, dict): receipts=list(receipts.values())
     denom = max(1, len(opportunities)*repetitions*2)
-    start = {'experiment_id':experiment_id,'validation_id':validation_id,'model':model,'repetitions':repetitions,
+    start = {'experiment_id':experiment_id,'validation_id':validation_id,'model':model,'model_version':version,'repetitions':repetitions,
              'budget_usd':budget_usd,'input_hash':S.digest(inputs),'started_at':C.now().isoformat(),
-             'mode':'local_fake' if provider else 'explicit_real_ai','comparison_label':'new_paired_model_comparison',
+             'mode':mode,'comparison_label':'new_paired_model_comparison',
              'subagent_policy':'frozen bull then bear then coordinator; explicit same model, per-arm budget split 25/25/50; live Agent tool disabled'}
     start.update(input_id=inputs.get('input_id'),spec_hash=S.digest(manifest),proposal_hash=S.digest(proposal))
-    with S.locked('prompt-budget-'+validation_id):
-        previous=S.records('prompt_experiments')
-        if previous['errors']: raise ValueError('PRIOR_EXPERIMENT_BUDGET_UNCONFIRMED')
-        if any(x.get('validation_id')==validation_id for x in previous['records']):
-            raise ValueError('EXPERIMENT_ALREADY_STARTED_REGISTER_NEW_VARIANT_FOR_RETRY')
+    key=S.load('prompt_run_keys',validation_id)
+    if key and key.get('identity')!=identity:raise ValueError('EXPERIMENT_IDENTITY_CHANGED_REGISTER_NEW_VARIANT')
+    if not key:
+        errors=[]
+        previous=list(S.iter_records('prompt_experiments',filters={'validation_id':validation_id},errors=errors))
+        if errors:raise ValueError('PRIOR_EXPERIMENT_BUDGET_UNCONFIRMED')
+        if any(x.get('experiment_id')!=experiment_id for x in previous):
+            raise ValueError('LEGACY_EXPERIMENT_ALREADY_STARTED_REGISTER_NEW_VARIANT')
+        S.archive('prompt_run_keys',validation_id,{'experiment_id':experiment_id,'identity':identity})
+    old_start=S.load('prompt_experiments',experiment_id)
+    if old_start:start=old_start
+    else:
         S.archive('prompt_experiments',experiment_id,start)
+    completed=S.load('prompt_results',experiment_id)
+    if completed:
+        commit={'experiment_id':experiment_id,'validation_id':validation_id,'result_hash':S.digest(completed)}
+        S.archive('prompt_result_commits',experiment_id,commit)
+        return completed
     trials, pairs, gaps = [], [], []
     provider = provider or _cli_provider
-    for opportunity in opportunities:
+    for opportunity_index,opportunity in enumerate(opportunities):
         aid = opportunity['run_attempt_id']
         ri = inputs.get('runtime_inputs',{}).get(aid)
         if isinstance(ri,dict) and 'snapshot' in ri: ri=ri['snapshot']
-        if ri and (ri.get('options') or {}).get('semantic_stages'):
-            gaps.append({'target':opportunity,'reason':'staged_semantic_replay_not_supported_by_legacy_prompt_comparison'})
-            continue
         subset = [r for r in receipts if r.get('run_attempt_id')==aid]
         if not ri or not ri.get('cmd_prompt') or not subset:
             gaps.append({'target':opportunity,'reason':'original_prompt_or_receipts_unavailable'});continue
@@ -335,28 +397,44 @@ def run_prompt_validation(validation_id, *, with_ai=False, model=None, repetitio
         for repetition in range(repetitions):
             pair = []
             for arm in ('baseline','candidate'):
-                trial_id='trial-'+uuid.uuid4().hex
+                trial_id='trial-'+S.digest([experiment_id,opportunity_index,repetition,arm])[:40]
                 target={k:opportunity[k] for k in ('run_attempt_id','code','confidence_for')}
                 target['run_id']=(subset[0].get('ai_run_id') or subset[0].get('run_id')) if subset else None
                 prompt=original+'\nThis is an isolated historical experiment. Use only frozen tools. Submit one structured judgment for '+S.canonical(target)+'. Missing old information remains unavailable; no order is possible.'
                 if arm=='candidate' and matches is True: prompt+='\nEXPERIMENTAL GUIDANCE (not a verified market fact):\n'+proposal['effect']['text']
                 request={'trial_id':trial_id,'experiment_id':experiment_id,'validation_id':validation_id,'arm':arm,
                          'repetition':repetition,'target':target,'as_of':as_of,'receipts':by_arm[arm],'prompt':prompt,
-                         'model':model,'budget_usd':budget_usd/denom,'condition_result':matches,
+                         'model':model,'model_version':version,'budget_usd':budget_usd/denom,'condition_result':matches,
                          'agents':agents,
                          'new_guidance_applied':arm=='candidate' and matches is True}
                 S.archive('prompt_requests',trial_id,request)
+                previous=S.load('prompt_trials',trial_id)
+                if previous:
+                    trials.append(previous);pair.append(previous);continue
                 frozen=FrozenTools(request)
                 row={'trial_id':trial_id,'arm':arm,'target':target,'repetition':repetition}
                 try:
+                    dispatched=S.load('prompt_trial_dispatches',trial_id)
+                    if dispatched and provider is not _cli_provider:
+                        raise ValueError('PROMPT_DISPATCH_OUTCOME_UNCONFIRMED')
+                    if not dispatched:
+                        S.archive('prompt_trial_dispatches',trial_id,{'trial_id':trial_id,'request_hash':S.digest(request)})
                     result=provider(copy.deepcopy(request),frozen)
                     accepted=[x for x in frozen.submissions if x.get('status')=='accepted']
-                    row.update(status='error' if result.get('returncode',0) else 'accepted' if accepted else 'rejected' if frozen.submissions else 'not_submitted',
+                    failed=result.get('returncode',0) or (provider is _cli_provider and result.get('provider_result_status','parsed')!='parsed')
+                    row.update(status='error' if failed else 'accepted' if accepted else 'rejected' if frozen.submissions else 'not_submitted',
                                output=result, judgments=accepted)
                 except Exception as exc:
-                    row.update(status='timeout' if isinstance(exc,TimeoutError) else 'error',error=str(exc))
+                    # Admission failures happen before that stage is sent. Keep
+                    # the immutable request and all completed predecessors, but
+                    # do not seal an unfinished budget wait as a final trial.
+                    waiting=(provider is _cli_provider and str(exc).split(':',1)[0] in {
+                        'RESEARCH_BUDGET_BLOCKED','CAPACITY_CONFIGURATION_REQUIRED',
+                        'CAPACITY_JOB_BYTES_EXCEEDED','CAPACITY_CASE_COUNT_EXCEEDED',
+                        'CAPACITY_STORAGE_BYTES_EXCEEDED'})
+                    row.update(status='waiting' if waiting else 'timeout' if isinstance(exc,TimeoutError) else 'error',error=str(exc))
                 row.update(calls=frozen.calls,submissions=frozen.submissions,condition_result=matches)
-                S.archive('prompt_trials',trial_id,row)
+                if row['status']!='waiting':S.archive('prompt_trials',trial_id,row)
                 trials.append(row);pair.append(row)
             pairs.append({'trial_ids':[x['trial_id'] for x in pair], 'status':'paired' if all(x['status']=='accepted' for x in pair) else 'incomplete',
                           'target':opportunity,'repetition':repetition})
@@ -366,6 +444,8 @@ def run_prompt_validation(validation_id, *, with_ai=False, model=None, repetitio
             'adoption_eligibility':False,'performance_status':'requires_sequential_simulation_of_paired_outputs'}
     output['simulations']=simulate_trials(inputs,spec,trials,repetitions)
     output['performance_status']='complete' if output['simulations'] and all(x['status']=='complete' for x in output['simulations']) else 'incomplete'
+    if any(row['status']=='waiting' for row in trials):
+        return {**output,'status':'waiting','resumable':True,'final_result_committed':False}
     S.archive('prompt_results',experiment_id,output)
     S.archive('prompt_result_commits',experiment_id,{'experiment_id':experiment_id,'validation_id':validation_id,'result_hash':S.digest(output)})
     return output

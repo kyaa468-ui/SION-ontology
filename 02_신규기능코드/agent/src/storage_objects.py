@@ -18,6 +18,7 @@ import sys
 import tempfile
 
 import snapshot_store as legacy
+import storage_leases
 
 REF = '$sigma_object_ref'
 FORMAT = 'sigma-object@v2'
@@ -175,6 +176,7 @@ def ref_info(ref):
     return info
 
 
+@storage_leases.guarded
 def put_object(value, *, kind='content', base=None):
     """Freeze now. No identity-only memoization of mutable caller input."""
     active = set()
@@ -239,6 +241,9 @@ class Resolver:
     """Request-local, verified, bounded decoded-node cache; never a permission."""
     def __init__(self, base=None, *, budget=CACHE_BYTES, dependencies=None):
         self.base, self.budget = base, budget
+        # A returned lazy value keeps this resolver alive, and thus its source
+        # generation pinned, even after the request scope has returned.
+        self._storage_pin = storage_leases.Pin(legacy.root(base).parent.parent)
         self.cache = OrderedDict()
         self.trackers=[]
         self.used = 0
